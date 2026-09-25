@@ -141,7 +141,7 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
             )}
 
             {/* Official Google Sign-in Styled Button */}
-            <div className="pt-2 flex justify-center">
+            <div className="pt-2 flex flex-col items-center gap-2">
               <button
                 type="button"
                 onClick={signInWithGoogle}
@@ -155,6 +155,9 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                 </svg>
                 <span>Sign in with Google & Create Files</span>
               </button>
+              <p className="text-[11px] text-slate-400 max-w-xs text-center px-2">
+                💡 Note: If Google shows <span className="text-amber-300 font-medium">"Google hasn't verified this app"</span>, click <span className="text-amber-300 font-medium">"Continue"</span> to proceed.
+              </p>
             </div>
           </div>
         ) : (

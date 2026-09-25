@@ -172,6 +172,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             ...p,
             totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0)
           })));
+        } else if (initialCloudProductsLoaded) {
+          setProducts([]);
         } else if (!initialCloudProductsLoaded) {
           // If cloud is empty but local storage has items (e.g. from user's current PC session),
           // seed them up to Firestore so all devices (phone, iPad, web) see them immediately!
@@ -676,7 +678,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       createdAt: new Date().toISOString()
     };
 
-    setProducts(prev => [fullProduct, ...prev]);
+    setProducts(prev => {
+      const next = [fullProduct, ...prev];
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(next));
+      return next;
+    });
     saveProductToFirestore(fullProduct).catch(e => console.error('Cloud product save error:', e));
     return fullProduct;
   };
@@ -691,7 +697,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // 4. Delete Product
   const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    setProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(next));
+      return next;
+    });
     deleteProductFromFirestore(id).catch(e => console.error('Cloud product delete error:', e));
   };
 

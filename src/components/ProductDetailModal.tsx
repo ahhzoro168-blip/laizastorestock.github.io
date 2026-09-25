@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ShoeProduct, ShoeColor, ShoeGender, ShoeCategory } from '../types';
 import { useInventory } from '../context/InventoryContext';
+import { getColorStyle } from './InventoryView';
 
 interface ProductDetailModalProps {
   product: ShoeProduct | null;

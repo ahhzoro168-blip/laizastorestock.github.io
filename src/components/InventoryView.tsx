@@ -26,12 +26,53 @@ interface InventoryViewProps {
 }
 
 export const COLOR_STYLES: Record<string, { bg: string; border: string; text: string }> = {
-  Black: { bg: 'bg-slate-900', border: 'border-slate-700', text: 'text-slate-200' },
-  White: { bg: 'bg-slate-100', border: 'border-slate-300', text: 'text-slate-900' },
-  'ខ្មៅ': { bg: 'bg-slate-900', border: 'border-slate-700', text: 'text-slate-200' },
-  'ស': { bg: 'bg-slate-100', border: 'border-slate-300', text: 'text-slate-900' },
-  Navy: { bg: 'bg-blue-900', border: 'border-blue-700', text: 'text-blue-200' },
+  Black: { bg: 'bg-black', border: 'border-slate-600', text: 'text-slate-200' },
+  White: { bg: 'bg-white', border: 'border-slate-300', text: 'text-slate-900' },
+  'ខ្មៅ': { bg: 'bg-black', border: 'border-slate-600', text: 'text-slate-200' },
+  'ខៅ': { bg: 'bg-black', border: 'border-slate-600', text: 'text-slate-200' },
+  'ស': { bg: 'bg-white', border: 'border-slate-300', text: 'text-slate-900' },
+  Navy: { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-blue-200' },
   Beige: { bg: 'bg-[#d8c3a5]', border: 'border-amber-400', text: 'text-amber-950' }
+};
+
+export const getColorStyle = (colorName: string): { bg: string; border: string; text: string } => {
+  if (!colorName) return { bg: 'bg-slate-700', border: 'border-slate-600', text: 'text-white' };
+  const normalized = colorName.trim().toLowerCase();
+
+  if (COLOR_STYLES[colorName]) return COLOR_STYLES[colorName];
+
+  if (normalized === 'black' || normalized === 'ខ្មៅ' || normalized === 'ខៅ') {
+    return { bg: 'bg-black', border: 'border-slate-600', text: 'text-white' };
+  }
+  if (normalized === 'white' || normalized === 'ស') {
+    return { bg: 'bg-white', border: 'border-slate-300', text: 'text-slate-900' };
+  }
+  if (normalized === 'navy' || normalized === 'blue' || normalized === 'ខៀវ') {
+    return { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-white' };
+  }
+  if (normalized === 'beige' || normalized === 'cream' || normalized === 'បន៍') {
+    return { bg: 'bg-[#d8c3a5]', border: 'border-amber-400', text: 'text-amber-950' };
+  }
+  if (normalized === 'brown' || normalized === 'ត្នោត') {
+    return { bg: 'bg-amber-800', border: 'border-amber-600', text: 'text-white' };
+  }
+  if (normalized === 'red' || normalized === 'ក្រហម') {
+    return { bg: 'bg-rose-600', border: 'border-rose-400', text: 'text-white' };
+  }
+  if (normalized === 'green' || normalized === 'បៃតង') {
+    return { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-white' };
+  }
+  if (normalized === 'grey' || normalized === 'gray' || normalized === 'ប្រផេះ') {
+    return { bg: 'bg-slate-500', border: 'border-slate-400', text: 'text-white' };
+  }
+  if (normalized === 'pink' || normalized === 'ផ្កាឈូក') {
+    return { bg: 'bg-pink-500', border: 'border-pink-300', text: 'text-white' };
+  }
+  if (normalized === 'yellow' || normalized === 'gold' || normalized === 'លឿង') {
+    return { bg: 'bg-amber-400', border: 'border-amber-300', text: 'text-slate-950' };
+  }
+
+  return { bg: 'bg-amber-500', border: 'border-amber-400', text: 'text-white' };
 };
 
 // ==========================================
@@ -124,8 +165,8 @@ const ProductGridCard: React.FC<{
         </div>
 
         {/* Color Badge */}
-        <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-amber-500/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-amber-300 flex items-center gap-1.5 shadow-md">
-          <span className={`w-2 h-2 rounded-full ${COLOR_STYLES[selectedColor]?.bg} ${COLOR_STYLES[selectedColor]?.border} border`} />
+        <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-amber-500/40 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-amber-300 flex items-center gap-1.5 shadow-md">
+          <span className={`w-2.5 h-2.5 rounded-full ${getColorStyle(selectedColor).bg} ${getColorStyle(selectedColor).border} border ring-1 ring-black/40`} />
           <span>{selectedColor} Colorway</span>
         </div>
 
@@ -180,27 +221,28 @@ const ProductGridCard: React.FC<{
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 {colors.map(color => {
                   const isSelected = selectedColor === color;
                   const colorTotal = product.variants
                     .filter(v => v.color === color)
                     .reduce((sum, v) => sum + v.stock, 0);
+                  const style = getColorStyle(color);
 
                   return (
                     <button
                       key={color}
                       type="button"
                       onClick={() => handleColorChange(color)}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all border ${
+                      className={`flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all border cursor-pointer active:scale-95 shadow-sm ${
                         isSelected
-                          ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm font-semibold'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          ? 'bg-amber-500/25 border-amber-400 text-amber-200 ring-2 ring-amber-400/50 shadow-md scale-[1.03]'
+                          : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800'
                       }`}
                       title={`Select ${color} (${colorTotal} pairs)`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${COLOR_STYLES[color]?.bg} ${COLOR_STYLES[color]?.border} border`} />
-                      <span>{color}</span>
+                      <span className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${style.bg} ${style.border} border ring-1 ring-black/50 shadow-sm shrink-0`} />
+                      <span className="leading-tight">{color}</span>
                     </button>
                   );
                 })}
@@ -435,27 +477,28 @@ const ProductListCard: React.FC<{
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {colors.map(color => {
               const isSelected = selectedColor === color;
               const colorStock = product.variants
                 .filter(v => v.color === color)
                 .reduce((sum, v) => sum + v.stock, 0);
+              const style = getColorStyle(color);
 
               return (
                 <button
                   key={color}
                   type="button"
                   onClick={() => handleColorChange(color)}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all border ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer active:scale-95 shadow-sm ${
                     isSelected
-                      ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm font-semibold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-amber-500/25 border-amber-400 text-amber-200 ring-2 ring-amber-400/50 shadow-md scale-[1.03]'
+                      : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800'
                   }`}
                   title={`Select ${color} (${colorStock} pairs)`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${COLOR_STYLES[color]?.bg} ${COLOR_STYLES[color]?.border} border`} />
-                  <span>{color}</span>
+                  <span className={`w-3.5 h-3.5 rounded-full ${style.bg} ${style.border} border ring-1 ring-black/50 shadow-sm shrink-0`} />
+                  <span className="leading-tight">{color}</span>
                 </button>
               );
             })}
