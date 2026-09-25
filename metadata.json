@@ -1,0 +1,7 @@
+{
+  "name": "SoleTrack Inventory & POS",
+  "description": "Real-time shoe inventory control, POS sales tracking, seasonal insights, automated purchase orders, and multi-channel order tracking.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
