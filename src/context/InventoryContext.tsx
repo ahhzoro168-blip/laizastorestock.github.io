@@ -14,6 +14,16 @@ import {
   SaleOrderItem,
   RecordMultiSaleInput
 } from '../types';
+import {
+  subscribeToProducts,
+  subscribeToOrders,
+  subscribeToPurchaseOrders,
+  saveProductToFirestore,
+  deleteProductFromFirestore,
+  saveOrderToFirestore,
+  savePOToFirestore,
+  seedLocalItemsToFirestore
+} from '../services/firebaseDb';
 import { 
   INITIAL_PRODUCTS, 
   INITIAL_ORDERS, 
@@ -84,6 +94,7 @@ interface InventoryContextType {
   resetDemoData: () => void;
   clearAllData: () => void;
   restoreAllData: (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => void;
+  isCloudConnected: boolean;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -144,6 +155,93 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     return [];
   });
+
+  const [isCloudConnected, setIsCloudConnected] = useState<boolean>(true);
+
+  // Real-time synchronization across devices (PC, Phone, iPad, and GitHub site)
+  useEffect(() => {
+    let initialCloudProductsLoaded = false;
+    let initialCloudOrdersLoaded = false;
+    let initialCloudPOsLoaded = false;
+
+    const unsubProducts = subscribeToProducts(
+      (cloudProducts) => {
+        setIsCloudConnected(true);
+        if (cloudProducts.length > 0) {
+          setProducts(cloudProducts.map(p => ({
+            ...p,
+            totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0)
+          })));
+        } else if (!initialCloudProductsLoaded) {
+          // If cloud is empty but local storage has items (e.g. from user's current PC session),
+          // seed them up to Firestore so all devices (phone, iPad, web) see them immediately!
+          const localSaved = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+          if (localSaved) {
+            try {
+              const localParsed: ShoeProduct[] = JSON.parse(localSaved);
+              if (localParsed.length > 0) {
+                seedLocalItemsToFirestore(localParsed, [], []);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+        initialCloudProductsLoaded = true;
+      },
+      (err) => {
+        console.warn('Realtime products listener error:', err);
+      }
+    );
+
+    const unsubOrders = subscribeToOrders(
+      (cloudOrders) => {
+        if (cloudOrders.length > 0) {
+          setOrders(cloudOrders);
+        } else if (!initialCloudOrdersLoaded) {
+          const localSaved = localStorage.getItem(STORAGE_KEY_ORDERS);
+          if (localSaved) {
+            try {
+              const localParsed: SaleOrder[] = JSON.parse(localSaved);
+              if (localParsed.length > 0) {
+                seedLocalItemsToFirestore([], localParsed, []);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+        initialCloudOrdersLoaded = true;
+      }
+    );
+
+    const unsubPOs = subscribeToPurchaseOrders(
+      (cloudPOs) => {
+        if (cloudPOs.length > 0) {
+          setPurchaseOrders(cloudPOs);
+        } else if (!initialCloudPOsLoaded) {
+          const localSaved = localStorage.getItem(STORAGE_KEY_PO);
+          if (localSaved) {
+            try {
+              const localParsed: PurchaseOrder[] = JSON.parse(localSaved);
+              if (localParsed.length > 0) {
+                seedLocalItemsToFirestore([], [], localParsed);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+        initialCloudPOsLoaded = true;
+      }
+    );
+
+    return () => {
+      unsubProducts();
+      unsubOrders();
+      unsubPOs();
+    };
+  }, []);
 
   // Save to localStorage on change
   useEffect(() => {
@@ -427,6 +525,18 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setOrders(prev => [newOrder, ...prev]);
+    saveOrderToFirestore(newOrder).catch(e => console.error('Cloud order save error:', e));
+
+    // Also persist updated product stocks to Firestore
+    setProducts(currentProducts => {
+      currentProducts.forEach(prod => {
+        if (input.items.some(item => item.productId === prod.id)) {
+          saveProductToFirestore(prod).catch(e => console.error('Cloud stock update error:', e));
+        }
+      });
+      return currentProducts;
+    });
+
     clearCart();
     return newOrder;
   };
@@ -515,6 +625,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setOrders(prev => [newOrder, ...prev]);
+    saveOrderToFirestore(newOrder).catch(e => console.error('Cloud order save error:', e));
+    saveProductToFirestore({
+      ...product,
+      variants: updatedVariants,
+      totalStock: newTotalStock
+    }).catch(e => console.error('Cloud product stock sync error:', e));
     return newOrder;
   };
 
@@ -561,18 +677,22 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setProducts(prev => [fullProduct, ...prev]);
+    saveProductToFirestore(fullProduct).catch(e => console.error('Cloud product save error:', e));
     return fullProduct;
   };
 
   // 3. Update Existing Product
   const updateProduct = (updated: ShoeProduct) => {
     const totalStock = updated.variants.reduce((sum, v) => sum + v.stock, 0);
-    setProducts(prev => prev.map(p => p.id === updated.id ? { ...updated, totalStock } : p));
+    const finalProduct = { ...updated, totalStock };
+    setProducts(prev => prev.map(p => p.id === updated.id ? finalProduct : p));
+    saveProductToFirestore(finalProduct).catch(e => console.error('Cloud product update error:', e));
   };
 
   // 4. Delete Product
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+    deleteProductFromFirestore(id).catch(e => console.error('Cloud product delete error:', e));
   };
 
   // 5. Update specific variant stock directly (audit / manual stock in)
@@ -586,7 +706,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return v;
         });
         const totalStock = updatedVariants.reduce((sum, v) => sum + v.stock, 0);
-        return { ...p, variants: updatedVariants, totalStock };
+        const updatedP = { ...p, variants: updatedVariants, totalStock };
+        saveProductToFirestore(updatedP).catch(e => console.error('Cloud stock update error:', e));
+        return updatedP;
       }
       return p;
     }));
@@ -671,6 +793,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     setPurchaseOrders(prev => [newPO, ...prev]);
+    savePOToFirestore(newPO).catch(e => console.error('Cloud PO save error:', e));
     return newPO;
   };
 
@@ -696,11 +819,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               });
 
               const totalStock = updatedVariants.reduce((sum, v) => sum + v.stock, 0);
-              return { ...p, variants: updatedVariants, totalStock };
+              const restockedP = { ...p, variants: updatedVariants, totalStock };
+              saveProductToFirestore(restockedP).catch(e => console.error('Cloud restock error:', e));
+              return restockedP;
             });
           });
         }
-        return { ...po, status };
+        const updatedPO = { ...po, status };
+        savePOToFirestore(updatedPO).catch(e => console.error('Cloud PO update error:', e));
+        return updatedPO;
       }
       return po;
     }));
@@ -724,7 +851,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           note: note || `Order status updated to ${newStatus}`
         };
 
-        return {
+        const updatedOrder: SaleOrder = {
           ...order,
           orderStatus: newStatus,
           courierName: courierName || order.courierName,
@@ -732,6 +859,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           paymentStatus: (newStatus === 'Delivered' && order.paymentMethod === 'Cash on Delivery (COD)') ? 'Paid' : order.paymentStatus,
           trackingHistory: [...order.trackingHistory, newStep]
         };
+
+        saveOrderToFirestore(updatedOrder).catch(e => console.error('Cloud order update error:', e));
+        return updatedOrder;
       }
       return order;
     }));
@@ -796,7 +926,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateOrderStatus,
         resetDemoData,
         clearAllData,
-        restoreAllData
+        restoreAllData,
+        isCloudConnected
       }}
     >
       {children}

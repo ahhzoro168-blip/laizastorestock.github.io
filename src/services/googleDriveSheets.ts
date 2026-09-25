@@ -26,7 +26,7 @@ export async function ensureSoleTrackDriveFolder(accessToken: string): Promise<{
   if (!searchRes.ok) {
     const err = await searchRes.text();
     console.error('Drive search folder error:', err);
-    throw new Error(`Failed to access Google Drive: ${searchRes.statusText}`);
+    throw new Error(`Failed to access Google Drive: ${err || searchRes.statusText}`);
   }
 
   const searchData = await searchRes.json();
@@ -53,7 +53,9 @@ export async function ensureSoleTrackDriveFolder(accessToken: string): Promise<{
   });
 
   if (!createRes.ok) {
-    throw new Error(`Failed to create Google Drive folder: ${createRes.statusText}`);
+    const errText = await createRes.text();
+    console.error('Drive create folder error:', errText);
+    throw new Error(`Failed to create Google Drive folder: ${errText || createRes.statusText}`);
   }
 
   const created = await createRes.json();
@@ -154,8 +156,8 @@ export async function ensureSoleTrackSpreadsheet(
   folderId: string,
   accessToken: string
 ): Promise<{ spreadsheetId: string; spreadsheetUrl: string }> {
-  // Search for spreadsheet in the Drive folder
-  const query = encodeURIComponent(`name = 'SoleTrack Footwear Inventory & Sales' and mimeType = 'application/vnd.google-apps.spreadsheet' and '${folderId}' in parents and trashed = false`);
+  // Search for spreadsheet in Drive
+  const query = encodeURIComponent(`name = 'SoleTrack Footwear Inventory & Sales' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`);
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,webViewLink)`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
@@ -193,7 +195,9 @@ export async function ensureSoleTrackSpreadsheet(
   });
 
   if (!createSheetRes.ok) {
-    throw new Error(`Failed to create Google Spreadsheet: ${createSheetRes.statusText}`);
+    const errText = await createSheetRes.text();
+    console.error('Failed to create spreadsheet:', errText);
+    throw new Error(`Failed to create Google Spreadsheet: ${errText || createSheetRes.statusText}`);
   }
 
   const sheetData = await createSheetRes.json();
@@ -201,10 +205,13 @@ export async function ensureSoleTrackSpreadsheet(
 
   // Move the spreadsheet into the SoleTrack folder in Drive
   try {
-    await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folderId}&fields=id,parents`, {
+    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folderId}&fields=id,parents`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}` }
     });
+    if (!moveRes.ok) {
+      console.warn('Drive addParents warning:', await moveRes.text());
+    }
   } catch (err) {
     console.warn('Could not move sheet into folder:', err);
   }

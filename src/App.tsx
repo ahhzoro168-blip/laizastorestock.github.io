@@ -14,11 +14,11 @@ import { ReceiptModal } from './components/ReceiptModal';
 import { AddProductModal } from './components/AddProductModal';
 import { GoogleSyncModal } from './components/GoogleSyncModal';
 import { ShoeProduct, ShoeColor, SaleOrder } from './types';
-import { AlertTriangle, Sparkles, RefreshCw, Cloud, Table, ExternalLink } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { products, orders, purchaseOrders, lowStockItems, resetDemoData, restoreAllData } = useInventory();
-  const { user, spreadsheetUrl, driveFolderUrl, syncDataFromGoogle, syncDataToGoogle } = useGoogleAuth();
+  const { user, syncDataFromGoogle, syncDataToGoogle } = useGoogleAuth();
 
   // Navigation & Modals State
   const [activeTab, setActiveTab] = useState<ActiveTab>('inventory');
@@ -103,46 +103,8 @@ const MainApp: React.FC = () => {
         }}
       />
 
-      {/* Cloud Sync Status Banner when Google is Connected */}
-      {user && spreadsheetUrl && (
-        <div className="bg-slate-900/90 border-b border-emerald-500/20 px-4 py-2 flex items-center justify-between text-xs max-w-7xl mx-auto w-full mt-14 sm:mt-16">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-emerald-400 font-semibold">Google Sheets & Drive Connected:</span>
-            <span className="text-slate-300 hidden sm:inline">All shoe data, pictures, and sales are automatically backed up</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href={spreadsheetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 hover:underline text-[11px]"
-            >
-              <Table className="w-3.5 h-3.5" />
-              <span>Open Google Sheet</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-            {driveFolderUrl && (
-              <a
-                href={driveFolderUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 hover:underline text-[11px] hidden sm:flex"
-              >
-                <Cloud className="w-3.5 h-3.5" />
-                <span>Drive Photos Folder</span>
-                <ExternalLink className="w-2.5 h-2.5" />
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Main Content Area */}
-      <main className={`flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 pb-4 sm:pb-8 min-w-0 ${user && spreadsheetUrl ? 'pt-4' : 'pt-18 sm:pt-20'}`}>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 pt-18 sm:pt-20 pb-4 sm:pb-8 min-w-0">
         {activeTab === 'inventory' && (
           <InventoryView
             onOpenProductDetail={handleOpenProductDetail}

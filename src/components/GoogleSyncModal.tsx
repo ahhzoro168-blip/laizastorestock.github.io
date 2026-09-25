@@ -25,8 +25,10 @@ interface GoogleSyncModalProps {
 export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClose }) => {
   const { 
     user, 
+    hasToken,
     signInWithGoogle, 
     signOut, 
+    createOrVerifyCloudFiles,
     isSyncing, 
     syncStatus, 
     lastSyncTime, 
@@ -65,6 +67,16 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
     }
   };
 
+  const handleForceCreate = async () => {
+    setActionMessage('Creating SoleTrack folder in Google Drive and spreadsheet in Google Sheets...');
+    const ok = await createOrVerifyCloudFiles();
+    if (ok) {
+      await syncDataToGoogle(products, orders, purchaseOrders);
+      setActionMessage('✓ Folder & Spreadsheet created and synced successfully!');
+      setTimeout(() => setActionMessage(null), 4000);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
       <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
@@ -93,8 +105,8 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
           </button>
         </div>
 
-        {/* Content depending on login status */}
-        {!user ? (
+        {/* Content depending on login & token status */}
+        {!user || !hasToken ? (
           <div className="text-center py-6 space-y-5">
             <div className="w-16 h-16 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center mx-auto shadow-inner">
               <svg className="w-8 h-8" viewBox="0 0 24 24">
@@ -107,17 +119,33 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
 
             <div className="space-y-1.5 max-w-sm mx-auto">
               <h3 className="text-sm font-bold text-white">Connect Your Google Account</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Connect Google Drive and Google Sheets to ensure your shoe information, uploaded pictures, and sales orders are safely saved and never lost.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Click below to grant access. This will create:
               </p>
+              <ul className="text-[11px] text-slate-400 space-y-1 text-left bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <li className="flex items-center gap-1.5 text-slate-300">
+                  <Folder className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span><strong>SoleTrack Footwear Data & Photos</strong> (in Google Drive)</span>
+                </li>
+                <li className="flex items-center gap-1.5 text-slate-300">
+                  <Table className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span><strong>SoleTrack Footwear Inventory & Sales</strong> (in Google Sheets)</span>
+                </li>
+              </ul>
             </div>
+
+            {syncError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl text-left">
+                {syncError}
+              </div>
+            )}
 
             {/* Official Google Sign-in Styled Button */}
             <div className="pt-2 flex justify-center">
               <button
                 type="button"
                 onClick={signInWithGoogle}
-                className="flex items-center gap-3 px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                className="flex items-center gap-3 px-6 py-3 bg-white hover:bg-slate-100 text-slate-900 text-xs font-bold rounded-xl transition-all shadow-lg active:scale-95 cursor-pointer border border-slate-200"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -125,7 +153,7 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                <span>Sign in with Google</span>
+                <span>Sign in with Google & Create Files</span>
               </button>
             </div>
           </div>
@@ -176,17 +204,21 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                       <Table className="w-4 h-4 text-emerald-400" />
                       <div>
                         <span className="text-xs font-bold text-white block group-hover:text-emerald-300">
-                          Google Sheet
+                          SoleTrack Footwear Inventory & Sales
                         </span>
-                        <span className="text-[10px] text-slate-400">Inventory & Sales Database</span>
+                        <span className="text-[10px] text-slate-400">Google Sheet Database</span>
                       </div>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
                   </a>
                 ) : (
-                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-500 text-xs">
-                    Initializing Sheet...
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleForceCreate}
+                    className="p-3 bg-slate-950 border border-slate-800 hover:border-amber-400/50 rounded-xl text-left text-xs text-amber-300"
+                  >
+                    Create Spreadsheet Now
+                  </button>
                 )}
 
                 {driveFolderUrl ? (
@@ -200,17 +232,21 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                       <Folder className="w-4 h-4 text-blue-400" />
                       <div>
                         <span className="text-xs font-bold text-white block group-hover:text-blue-300">
-                          Drive Folder
+                          SoleTrack Footwear Data & Photos
                         </span>
-                        <span className="text-[10px] text-slate-400">Shoe Photos & Data</span>
+                        <span className="text-[10px] text-slate-400">Google Drive Folder</span>
                       </div>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
                   </a>
                 ) : (
-                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-500 text-xs">
-                    Initializing Drive...
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleForceCreate}
+                    className="p-3 bg-slate-950 border border-slate-800 hover:border-amber-400/50 rounded-xl text-left text-xs text-amber-300"
+                  >
+                    Create Drive Folder Now
+                  </button>
                 )}
               </div>
             </div>
@@ -239,6 +275,12 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                 </div>
               )}
 
+              {syncError && (
+                <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
+                  {syncError}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
@@ -258,6 +300,17 @@ export const GoogleSyncModal: React.FC<GoogleSyncModalProps> = ({ isOpen, onClos
                 >
                   <DownloadCloud className="w-3.5 h-3.5 text-amber-400" />
                   <span>Restore from Sheet</span>
+                </button>
+              </div>
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={handleForceCreate}
+                  className="text-[11px] text-slate-400 hover:text-slate-200 hover:underline inline-flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Re-create or verify folder & sheet</span>
                 </button>
               </div>
             </div>

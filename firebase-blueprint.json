@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "ShoeProduct": {
+      "title": "ShoeProduct",
+      "description": "Footwear inventory product model with colorways, sizes, pricing, and stock",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "gender": { "type": "string", "enum": ["men", "women", "unisex"] },
+        "category": { "type": "string" },
+        "costPrice": { "type": "number" },
+        "retailPrice": { "type": "number" },
+        "totalStock": { "type": "number" },
+        "images": { "type": "array" },
+        "colorImages": { "type": "object" },
+        "variants": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "sku", "costPrice", "retailPrice", "totalStock", "variants", "createdAt"]
+    },
+    "SaleOrder": {
+      "title": "SaleOrder",
+      "description": "Customer purchase transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "orderStatus": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "orderNumber", "customerName", "customerPhone", "totalAmount", "paymentStatus", "orderStatus", "createdAt"]
+    },
+    "PurchaseOrder": {
+      "title": "PurchaseOrder",
+      "description": "Stock procurement order from shoe vendors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "poNumber": { "type": "string" },
+        "supplierName": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "poNumber", "supplierName", "totalAmount", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/ShoeProduct" },
+      "description": "Store shoe catalog items and stock variants"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/SaleOrder" },
+      "description": "Store sale transactions and order delivery status"
+    },
+    "/purchase_orders/{poId}": {
+      "schema": { "$ref": "#/entities/PurchaseOrder" },
+      "description": "Supplier purchase orders and restocking records"
+    }
+  }
+}

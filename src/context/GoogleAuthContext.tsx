@@ -27,6 +27,7 @@ export const WORKSPACE_SCOPES = [
 
 interface GoogleAuthContextType {
   user: User | null;
+  hasToken: boolean;
   isLoading: boolean;
   isSyncing: boolean;
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
@@ -36,6 +37,7 @@ interface GoogleAuthContextType {
   syncError: string | null;
   signInWithGoogle: () => Promise<boolean>;
   signOut: () => Promise<void>;
+  createOrVerifyCloudFiles: () => Promise<boolean>;
   syncDataToGoogle: (products: ShoeProduct[], orders: SaleOrder[], purchaseOrders: PurchaseOrder[]) => Promise<boolean>;
   syncDataFromGoogle: () => Promise<LoadedSyncData | null>;
   uploadProductPhoto: (base64Data: string, filename: string) => Promise<string>;
@@ -49,6 +51,9 @@ const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 WORKSPACE_SCOPES.forEach(scope => provider.addScope(scope));
+provider.setCustomParameters({
+  prompt: 'select_account consent'
+});
 
 // In-memory access token cache (CRITICAL per security instructions)
 let inMemoryAccessToken: string | null = null;
@@ -60,6 +65,7 @@ const STORAGE_KEY_LAST_SYNC = 'soletrack_last_sync_v1';
 
 export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [hasToken, setHasToken] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
@@ -89,15 +95,53 @@ export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }
       setUser(currentUser);
       setIsLoading(false);
 
-      if (!currentUser) {
-        inMemoryAccessToken = null;
-        tokenRef.current = null;
-        setSyncStatus('idle');
+      if (!currentUser || !inMemoryAccessToken) {
+        setHasToken(false);
+        if (!currentUser) {
+          inMemoryAccessToken = null;
+          tokenRef.current = null;
+          setSyncStatus('idle');
+        }
+      } else {
+        setHasToken(true);
       }
     });
 
     return () => unsubscribe();
   }, []);
+
+  const createOrVerifyCloudFiles = async (): Promise<boolean> => {
+    const token = tokenRef.current || inMemoryAccessToken;
+    if (!token) {
+      return await signInWithGoogle();
+    }
+
+    try {
+      setIsSyncing(true);
+      setSyncStatus('syncing');
+      setSyncError(null);
+
+      const folder = await ensureSoleTrackDriveFolder(token);
+      setDriveFolderId(folder.folderId);
+      setDriveFolderUrl(folder.folderUrl);
+      localStorage.setItem(STORAGE_KEY_FOLDER, folder.folderId);
+
+      const sheet = await ensureSoleTrackSpreadsheet(folder.folderId, token);
+      setSpreadsheetId(sheet.spreadsheetId);
+      setSpreadsheetUrl(sheet.spreadsheetUrl);
+      localStorage.setItem(STORAGE_KEY_SPREADSHEET, sheet.spreadsheetId);
+
+      setSyncStatus('synced');
+      return true;
+    } catch (err: any) {
+      console.error('Create cloud files error:', err);
+      setSyncError(err?.message || 'Failed to create Drive/Sheets files');
+      setSyncStatus('error');
+      return false;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const signInWithGoogle = async (): Promise<boolean> => {
     try {
@@ -109,11 +153,12 @@ export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }
       const credential = GoogleAuthProvider.credentialFromResult(result);
 
       if (!credential?.accessToken) {
-        throw new Error('Could not obtain Google Workspace access token.');
+        throw new Error('Could not obtain Google Workspace access token. Please grant permissions in the Google prompt.');
       }
 
       inMemoryAccessToken = credential.accessToken;
       tokenRef.current = credential.accessToken;
+      setHasToken(true);
       setUser(result.user);
 
       // Initialize Drive Folder & Google Sheets database right away
@@ -145,6 +190,7 @@ export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }
     await firebaseSignOut(auth);
     inMemoryAccessToken = null;
     tokenRef.current = null;
+    setHasToken(false);
     setUser(null);
     setSyncStatus('idle');
   };
@@ -279,6 +325,7 @@ export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }
     <GoogleAuthContext.Provider
       value={{
         user,
+        hasToken,
         isLoading,
         isSyncing,
         syncStatus,
@@ -288,6 +335,7 @@ export const GoogleAuthProviderComponent: React.FC<{ children: React.ReactNode }
         syncError,
         signInWithGoogle,
         signOut,
+        createOrVerifyCloudFiles,
         syncDataToGoogle,
         syncDataFromGoogle,
         uploadProductPhoto
