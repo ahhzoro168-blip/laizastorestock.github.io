@@ -116,6 +116,31 @@ const STORAGE_KEY_PO = 'soletrack_po_v2';
 const STORAGE_KEY_CART = 'soletrack_cart_v2';
 const STORAGE_KEY_CATEGORIES = 'soletrack_categories_v2';
 const STORAGE_KEY_SKUS = 'soletrack_skus_v2';
+const STORAGE_KEY_DELETED_PRODUCT_IDS = 'soletrack_deleted_product_ids_v2';
+
+const getDeletedProductIds = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_DELETED_PRODUCT_IDS);
+    if (saved) {
+      return new Set(JSON.parse(saved));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return new Set();
+};
+
+const markProductAsDeleted = (id: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getDeletedProductIds();
+    current.add(id);
+    localStorage.setItem(STORAGE_KEY_DELETED_PRODUCT_IDS, JSON.stringify(Array.from(current)));
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 // Purge obsolete demo keys from browser storage once
 if (typeof window !== 'undefined') {
@@ -320,6 +345,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       (cloudProducts) => {
         setIsCloudConnected(true);
 
+        const deletedIds = getDeletedProductIds();
+
         // Read local storage to preserve any items created locally that haven't synchronized to Firestore yet
         let localProducts: ShoeProduct[] = [];
         const localSaved = localStorage.getItem(STORAGE_KEY_PRODUCTS);
@@ -331,10 +358,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
         }
 
-        const cloudMap = new Map(cloudProducts.map(p => [p.id, p]));
+        // Filter out any explicitly deleted products from cloud response
+        const validCloudProducts = cloudProducts.filter(p => !deletedIds.has(p.id));
 
-        // Find local items that are NOT in cloud yet
-        const pendingLocalItems = localProducts.filter(p => !cloudMap.has(p.id));
+        const cloudMap = new Map(validCloudProducts.map(p => [p.id, p]));
+
+        // Find local items that are NOT in cloud yet AND NOT deleted
+        const pendingLocalItems = localProducts.filter(p => !cloudMap.has(p.id) && !deletedIds.has(p.id));
 
         if (pendingLocalItems.length > 0) {
           // Re-sync missing local items to Firestore automatically so they never get lost
@@ -345,7 +375,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         // Merge cloud products with pending local items
         const mergedProducts = [
-          ...cloudProducts.map(p => ({
+          ...validCloudProducts.map(p => ({
             ...p,
             totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0)
           })),
@@ -357,6 +387,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(mergedProducts));
         } else if (initialCloudProductsLoaded) {
           setProducts([]);
+          localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
         }
         initialCloudProductsLoaded = true;
       },
@@ -900,6 +931,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // 4. Delete Product
   const deleteProduct = (id: string) => {
+    markProductAsDeleted(id);
     setProducts(prev => {
       const next = prev.filter(p => p.id !== id);
       localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(next));
@@ -1081,6 +1113,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const clearAllData = () => {
+    products.forEach(p => {
+      markProductAsDeleted(p.id);
+      deleteProductFromFirestore(p.id).catch(e => console.error('Cloud product clear error:', e));
+    });
     setProducts([]);
     setOrders([]);
     setPurchaseOrders([]);
