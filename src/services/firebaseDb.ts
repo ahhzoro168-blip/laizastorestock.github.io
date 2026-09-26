@@ -111,11 +111,23 @@ export function subscribeToPurchaseOrders(
 }
 
 /**
+ * Remove any 'undefined' properties recursively so Firestore setDoc / batch.set
+ * never throws "Unsupported field value: undefined" errors.
+ */
+function sanitizeForFirestore<T>(data: T): T {
+  if (data === null || data === undefined) return data;
+  return JSON.parse(
+    JSON.stringify(data, (_key, value) => (value === undefined ? null : value))
+  );
+}
+
+/**
  * Save / Update a product to Firestore
  */
 export async function saveProductToFirestore(product: ShoeProduct): Promise<void> {
   const docRef = doc(db, 'products', product.id);
-  await setDoc(docRef, product, { merge: true });
+  const cleanData = sanitizeForFirestore(product);
+  await setDoc(docRef, cleanData, { merge: true });
 }
 
 /**
@@ -131,7 +143,8 @@ export async function deleteProductFromFirestore(productId: string): Promise<voi
  */
 export async function saveOrderToFirestore(order: SaleOrder): Promise<void> {
   const docRef = doc(db, 'orders', order.id);
-  await setDoc(docRef, order, { merge: true });
+  const cleanData = sanitizeForFirestore(order);
+  await setDoc(docRef, cleanData, { merge: true });
 }
 
 /**
@@ -139,7 +152,8 @@ export async function saveOrderToFirestore(order: SaleOrder): Promise<void> {
  */
 export async function savePOToFirestore(po: PurchaseOrder): Promise<void> {
   const docRef = doc(db, 'purchase_orders', po.id);
-  await setDoc(docRef, po, { merge: true });
+  const cleanData = sanitizeForFirestore(po);
+  await setDoc(docRef, cleanData, { merge: true });
 }
 
 export interface StoreConfig {
@@ -172,7 +186,8 @@ export function subscribeToStoreSettings(
  */
 export async function saveStoreSettingsToFirestore(config: StoreConfig): Promise<void> {
   const docRef = doc(db, 'settings', 'store_config');
-  await setDoc(docRef, config, { merge: true });
+  const cleanData = sanitizeForFirestore(config);
+  await setDoc(docRef, cleanData, { merge: true });
 }
 
 /**
@@ -183,17 +198,17 @@ export async function seedLocalItemsToFirestore(
   orders: SaleOrder[],
   purchaseOrders: PurchaseOrder[]
 ): Promise<void> {
-  if (products.length === 0 && orders.length === 0) return;
+  if (products.length === 0 && orders.length === 0 && purchaseOrders.length === 0) return;
 
   const batch = writeBatch(db);
   products.forEach((p) => {
-    batch.set(doc(db, 'products', p.id), p, { merge: true });
+    batch.set(doc(db, 'products', p.id), sanitizeForFirestore(p), { merge: true });
   });
   orders.forEach((o) => {
-    batch.set(doc(db, 'orders', o.id), o, { merge: true });
+    batch.set(doc(db, 'orders', o.id), sanitizeForFirestore(o), { merge: true });
   });
   purchaseOrders.forEach((po) => {
-    batch.set(doc(db, 'purchase_orders', po.id), po, { merge: true });
+    batch.set(doc(db, 'purchase_orders', po.id), sanitizeForFirestore(po), { merge: true });
   });
 
   await batch.commit();
