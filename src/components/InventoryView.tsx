@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { ShoeProduct, ShoeColor, ShoeGender } from '../types';
+import { formatRiel } from '../utils/currency';
 
 const ALL_COLORS: ShoeColor[] = ['Black', 'White', 'Navy', 'Beige'];
 
@@ -205,7 +206,7 @@ const ProductGridCard: React.FC<{
             </div>
             <div className="text-right shrink-0">
               <span className="text-base font-bold text-amber-400">
-                ${product.retailPrice.toFixed(2)}
+                {formatRiel(product.retailPrice)}
               </span>
             </div>
           </div>
@@ -444,7 +445,7 @@ const ProductListCard: React.FC<{
                 SKU: {product.sku}
               </span>
               <span className="font-bold text-amber-400 text-sm">
-                ${product.retailPrice.toFixed(2)}
+                {formatRiel(product.retailPrice)}
               </span>
             </div>
 
@@ -714,15 +715,20 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-black text-white font-['Syne'] tracking-tight">
-            Footwear Stock & Catalog
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-            Real-time multi-variant inventory across sizes, styles, and colorways.
-          </p>
+      {/* Top Banner */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+            <Package className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white font-['Syne']">
+              Stock & Catalog
+            </h1>
+            <p className="text-xs text-slate-400">
+              Real-time multi-variant inventory across sizes, styles, and colorways.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -1045,7 +1051,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 {totalCartItems} {totalCartItems === 1 ? 'Pair' : 'Pairs'} in Cart
               </p>
               <p className="text-[11px] text-slate-400 font-mono">
-                Total: <strong className="text-amber-400 font-bold">${totalCartAmount.toFixed(2)}</strong> ({cart.length} model{cart.length > 1 ? 's' : ''})
+                Total: <strong className="text-amber-400 font-bold">{formatRiel(totalCartAmount)}</strong> ({cart.length} model{cart.length > 1 ? 's' : ''})
               </p>
             </div>
           </div>

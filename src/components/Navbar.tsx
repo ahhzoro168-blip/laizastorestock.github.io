@@ -10,12 +10,13 @@ import {
   X,
   Cloud,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { useGoogleAuth } from '../context/GoogleAuthContext';
 
-export type ActiveTab = 'inventory' | 'pos' | 'tracking' | 'purchase_orders' | 'seasonal';
+export type ActiveTab = 'inventory' | 'pos' | 'tracking' | 'purchase_orders' | 'seasonal' | 'settings';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -42,8 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'inventory', label: 'Inventory', icon: <Package className="w-4 h-4" /> },
     { id: 'pos', label: 'Sell & POS', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'tracking', label: 'Order Tracking', icon: <Truck className="w-4 h-4" /> },
-    { id: 'purchase_orders', label: 'Purchase Orders', icon: <FileText className="w-4 h-4" /> },
-    { id: 'seasonal', label: 'Seasonal Insights', icon: <TrendingUp className="w-4 h-4" /> }
+    { id: 'seasonal', label: 'Seasonal Insights', icon: <TrendingUp className="w-4 h-4" /> },
+    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> }
   ];
 
   return (
@@ -56,11 +57,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('inventory')}
             className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2 group text-left shrink-0"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-black text-xs sm:text-sm shadow-md shadow-amber-500/20">
-              ST
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-amber-500/30 bg-slate-900 shadow-md shadow-amber-500/20 flex items-center justify-center">
+              <img src="/src/assets/images/laiza_store_logo_1790350995561.jpg" alt="Laiza Store" className="w-full h-full object-cover" />
             </div>
             <span className="font-['Syne'] font-extrabold text-base sm:text-lg text-slate-100 group-hover:text-amber-400 transition-colors">
-              SoleTrack
+              Laiza Store
             </span>
           </button>
         </div>

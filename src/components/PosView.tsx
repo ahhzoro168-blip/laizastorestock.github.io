@@ -23,6 +23,7 @@ import {
 import { useInventory } from '../context/InventoryContext';
 import { ShoeProduct, ShoeColor, LocationType, OrderPlatform, SaleOrder } from '../types';
 import { CAMBODIA_PROVINCES, PHNOM_PENH_DISTRICTS } from '../data/mockData';
+import { formatRiel } from '../utils/currency';
 
 interface PosViewProps {
   onOpenReceiptModal: (order: SaleOrder) => void;
@@ -255,7 +256,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                         </div>
                         <h4 className="text-xs font-bold text-slate-200 line-clamp-1">{p.name}</h4>
                         <div className="flex items-center justify-between mt-1 pt-1 border-t border-slate-800/80">
-                          <span className="text-xs font-mono font-bold text-amber-300">${p.retailPrice.toFixed(2)}</span>
+                          <span className="text-xs font-mono font-bold text-amber-300">{formatRiel(p.retailPrice)}</span>
                           <span className="text-[10px] font-mono text-slate-400">{p.totalStock} in stock</span>
                         </div>
                       </div>
@@ -278,7 +279,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                     </span>
                   </div>
                   <span className="text-xs font-mono font-bold text-amber-400">
-                    ${activeProduct.retailPrice.toFixed(2)}
+                    {formatRiel(activeProduct.retailPrice)}
                   </span>
                 </div>
 

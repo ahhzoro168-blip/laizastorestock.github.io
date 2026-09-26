@@ -381,7 +381,7 @@ export async function syncAllDataToGoogleSheets(
       p.costPrice,
       p.retailPrice,
       p.totalStock,
-      p.images[0] || '',
+      p.images[0]?.startsWith('data:') ? '[Base64 Image]' : (p.images[0] || ''),
       colorSummary,
       p.createdAt
     ]);
@@ -394,7 +394,8 @@ export async function syncAllDataToGoogleSheets(
         return v ? v.stock : 0;
       };
 
-      const colorImg = p.colorImages?.[cName] || p.images[0] || '';
+      const rawColorImg = p.colorImages?.[cName] || p.images[0] || '';
+      const colorImg = rawColorImg.startsWith('data:') ? '[Base64 Image]' : rawColorImg;
 
       colorwayRows.push([
         p.id,
@@ -490,16 +491,30 @@ export async function syncAllDataToGoogleSheets(
     ]);
   });
 
-  // 4. Prepare Backup JSON Row
+  // 4. Prepare Backup JSON Row (Chunked to stay safely under 50,000 char cell limit)
+  const cleanedProductsForBackup = products.map(p => ({
+    ...p,
+    images: p.images?.map(img => (img?.startsWith('data:') ? '[Base64 Image]' : img)),
+    colorImages: p.colorImages ? Object.fromEntries(
+      Object.entries(p.colorImages).map(([k, v]) => [k, typeof v === 'string' && v.startsWith('data:') ? '[Base64 Image]' : v])
+    ) : {}
+  }));
+
   const backupJson = JSON.stringify({
-    products,
+    products: cleanedProductsForBackup,
     orders,
     purchaseOrders
   });
 
+  const CHUNK_SIZE = 40000;
+  const jsonChunks: string[] = [];
+  for (let i = 0; i < backupJson.length; i += CHUNK_SIZE) {
+    jsonChunks.push(backupJson.substring(i, i + CHUNK_SIZE));
+  }
+
   const backupRows: any[][] = [
-    ['Last Synced Timestamp', 'Full JSON Data Backup'],
-    [new Date().toISOString(), backupJson]
+    ['Chunk #', 'JSON Backup Data Chunk (<40k chars each)'],
+    ...jsonChunks.map((chunk, idx) => [idx + 1, chunk])
   ];
 
   // Clear existing ranges then write updated rows
@@ -549,16 +564,17 @@ export async function loadAllDataFromGoogleSheets(
   accessToken: string
 ): Promise<LoadedSyncData | null> {
   try {
-    // Read the App_Sync_Backup tab first
-    const backupRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/App_Sync_Backup!B2`, {
+    // Read all chunks from App_Sync_Backup B2:B50
+    const backupRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/App_Sync_Backup!B2:B50`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
 
     if (backupRes.ok) {
       const data = await backupRes.json();
-      const rawJson = data.values?.[0]?.[0];
-      if (rawJson && typeof rawJson === 'string') {
-        const parsed = JSON.parse(rawJson);
+      const rows = data.values || [];
+      const fullJsonStr = rows.map((r: any[]) => r[0]).filter(Boolean).join('');
+      if (fullJsonStr && typeof fullJsonStr === 'string') {
+        const parsed = JSON.parse(fullJsonStr);
         if (parsed.products && Array.isArray(parsed.products)) {
           return {
             products: parsed.products || [],

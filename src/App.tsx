@@ -5,8 +5,8 @@ import { Navbar, ActiveTab } from './components/Navbar';
 import { InventoryView } from './components/InventoryView';
 import { PosView } from './components/PosView';
 import { OrderTrackingDashboard } from './components/OrderTrackingDashboard';
-import { PurchaseOrdersView } from './components/PurchaseOrdersView';
 import { SeasonalInsightsDashboard } from './components/SeasonalInsightsDashboard';
+import { SettingsView } from './components/SettingsView';
 import { LowStockDrawer } from './components/LowStockDrawer';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { SellModal } from './components/SellModal';
@@ -81,10 +81,6 @@ const MainApp: React.FC = () => {
     setActiveTab('tracking');
   };
 
-  const handleNavigateToPO = () => {
-    setActiveTab('purchase_orders');
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Plus_Jakarta_Sans'] antialiased w-full overflow-x-hidden">
       
@@ -127,12 +123,12 @@ const MainApp: React.FC = () => {
           />
         )}
 
-        {activeTab === 'purchase_orders' && (
-          <PurchaseOrdersView />
-        )}
-
         {activeTab === 'seasonal' && (
           <SeasonalInsightsDashboard />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsView />
         )}
       </main>
 
@@ -162,7 +158,7 @@ const MainApp: React.FC = () => {
       <LowStockDrawer
         isOpen={isLowStockDrawerOpen}
         onClose={() => setIsLowStockDrawerOpen(false)}
-        onNavigateToPO={handleNavigateToPO}
+        onNavigateToPO={() => setActiveTab('inventory')}
       />
 
       <ProductDetailModal

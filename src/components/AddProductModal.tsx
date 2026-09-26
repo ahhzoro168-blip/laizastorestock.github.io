@@ -112,8 +112,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState('');
 
-  const [costPrice, setCostPrice] = useState<number>(25.00);
-  const [retailPrice, setRetailPrice] = useState<number>(55.00);
+  const [costPrice, setCostPrice] = useState<number>(100000);
+  const [retailPrice, setRetailPrice] = useState<number>(220000);
 
   // Camera State for Colorways
   const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
@@ -559,35 +559,35 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <div className="grid grid-cols-2 gap-3.5 p-3.5 bg-slate-950 rounded-xl border border-slate-800">
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Cost Price (USD)
+                    Cost Price (៛)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-2 text-slate-500 text-xs">$</span>
                     <input
                       type="number"
-                      step="0.5"
+                      step="1000"
                       min="0"
                       value={costPrice}
                       onChange={(e) => setCostPrice(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-amber-400"
                     />
+                    <span className="absolute right-2.5 top-2 text-slate-500 text-xs">៛</span>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Retail Price (USD)
+                    Retail Price (៛)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-2 text-slate-500 text-xs">$</span>
                     <input
                       type="number"
-                      step="0.5"
+                      step="1000"
                       min="0"
                       value={retailPrice}
                       onChange={(e) => setRetailPrice(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-400"
                     />
+                    <span className="absolute right-2.5 top-2 text-amber-500/70 text-xs font-bold">៛</span>
                   </div>
                 </div>
               </div>
