@@ -206,7 +206,7 @@ export async function saveStoreSettingsToFirestore(config: StoreConfig): Promise
 }
 
 /**
- * Batch upload existing local items to Firestore if cloud is currently empty
+ * Upload existing local items to Firestore if cloud is currently empty or on manual sync
  */
 export async function seedLocalItemsToFirestore(
   products: ShoeProduct[],
@@ -215,16 +215,27 @@ export async function seedLocalItemsToFirestore(
 ): Promise<void> {
   if (products.length === 0 && orders.length === 0 && purchaseOrders.length === 0) return;
 
-  const batch = writeBatch(db);
-  products.forEach((p) => {
-    batch.set(doc(db, 'products', p.id), sanitizeForFirestore(p), { merge: true });
-  });
-  orders.forEach((o) => {
-    batch.set(doc(db, 'orders', o.id), sanitizeForFirestore(o), { merge: true });
-  });
-  purchaseOrders.forEach((po) => {
-    batch.set(doc(db, 'purchase_orders', po.id), sanitizeForFirestore(po), { merge: true });
-  });
+  for (const p of products) {
+    try {
+      await saveProductToFirestore(p);
+    } catch (e) {
+      console.error(`Failed uploading product ${p.name} to cloud:`, e);
+    }
+  }
 
-  await batch.commit();
+  for (const o of orders) {
+    try {
+      await saveOrderToFirestore(o);
+    } catch (e) {
+      console.error(`Failed uploading order ${o.orderNumber} to cloud:`, e);
+    }
+  }
+
+  for (const po of purchaseOrders) {
+    try {
+      await savePOToFirestore(po);
+    } catch (e) {
+      console.error(`Failed uploading PO ${po.poNumber} to cloud:`, e);
+    }
+  }
 }

@@ -383,13 +383,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           ...pendingLocalItems
         ];
 
-        if (mergedProducts.length > 0) {
-          setProducts(mergedProducts);
-          localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(mergedProducts));
-        } else if (initialCloudProductsLoaded) {
-          setProducts([]);
-          localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
-        }
+        setProducts(mergedProducts);
+        localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(mergedProducts));
         initialCloudProductsLoaded = true;
       },
       (err) => {
