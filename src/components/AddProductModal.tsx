@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, 
   Upload, 
@@ -97,6 +97,34 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [showColorPalette, setShowColorPalette] = useState<boolean>(false);
 
   const colorwayFileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  const resetForm = () => {
+    setName('');
+    setGender('men');
+    setSku(registeredSkus[0] || '');
+    setCategory(registeredCategories[0] || '');
+    setCostPrice('');
+    setRetailPrice('');
+    setColorways([
+      { id: 'cw-1', colorName: 'ខ្មៅ', colorHex: '#0f172a', image: '', sizes: INITIAL_SIZES.map(s => ({ ...s, stock: 0 })) },
+      { id: 'cw-2', colorName: 'ស', colorHex: '#ffffff', image: '', sizes: INITIAL_SIZES.map(s => ({ ...s, stock: 0 })) }
+    ]);
+    setCustomColorInput('');
+    setSelectedColorHex('#1e40af');
+    setShowColorPalette(false);
+    setIsSavingWithDrive(false);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -314,7 +342,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       tags: [category, gender]
     });
 
-    setIsSavingWithDrive(false);
+    resetForm();
     onClose();
   };
 
@@ -337,7 +365,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
@@ -748,7 +776,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800 shrink-0">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Cancel
