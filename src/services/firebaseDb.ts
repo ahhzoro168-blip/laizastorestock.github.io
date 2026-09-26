@@ -142,6 +142,39 @@ export async function savePOToFirestore(po: PurchaseOrder): Promise<void> {
   await setDoc(docRef, po, { merge: true });
 }
 
+export interface StoreConfig {
+  customCategories?: string[];
+  customSkus?: string[];
+}
+
+/**
+ * Real-time listener for Store Configuration (SKUs, Categories)
+ */
+export function subscribeToStoreSettings(
+  onUpdate: (config: StoreConfig) => void
+) {
+  const docRef = doc(db, 'settings', 'store_config');
+  return onSnapshot(
+    docRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        onUpdate(snapshot.data() as StoreConfig);
+      }
+    },
+    (err) => {
+      console.error('Firestore store_config snapshot error:', err);
+    }
+  );
+}
+
+/**
+ * Save store settings to Firestore
+ */
+export async function saveStoreSettingsToFirestore(config: StoreConfig): Promise<void> {
+  const docRef = doc(db, 'settings', 'store_config');
+  await setDoc(docRef, config, { merge: true });
+}
+
 /**
  * Batch upload existing local items to Firestore if cloud is currently empty
  */

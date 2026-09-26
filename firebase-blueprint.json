@@ -50,6 +50,15 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "poNumber", "supplierName", "totalAmount", "status", "createdAt"]
+    },
+    "StoreConfig": {
+      "title": "StoreConfig",
+      "description": "Global store configuration including custom Categories and Model SKUs",
+      "type": "object",
+      "properties": {
+        "customCategories": { "type": "array" },
+        "customSkus": { "type": "array" }
+      }
     }
   },
   "firestore": {
@@ -64,6 +73,10 @@
     "/purchase_orders/{poId}": {
       "schema": { "$ref": "#/entities/PurchaseOrder" },
       "description": "Supplier purchase orders and restocking records"
+    },
+    "/settings/{docId}": {
+      "schema": { "$ref": "#/entities/StoreConfig" },
+      "description": "Store custom categories and model SKUs"
     }
   }
 }

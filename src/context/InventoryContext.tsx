@@ -18,10 +18,12 @@ import {
   subscribeToProducts,
   subscribeToOrders,
   subscribeToPurchaseOrders,
+  subscribeToStoreSettings,
   saveProductToFirestore,
   deleteProductFromFirestore,
   saveOrderToFirestore,
   savePOToFirestore,
+  saveStoreSettingsToFirestore,
   seedLocalItemsToFirestore
 } from '../services/firebaseDb';
 import { 
@@ -169,21 +171,51 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [isCloudConnected, setIsCloudConnected] = useState<boolean>(true);
 
+  const DEFAULT_SKUS = [
+    'SHOE-01',
+    'SHOE-02',
+    'SHOE-03',
+    'SHOE-04',
+    'SHOE-05',
+    'SHOE-06',
+    'SHOE-07',
+    'SHOE-08'
+  ];
+
+  const DEFAULT_CATEGORIES = [
+    'ស្បែកជើងសកល',
+    'ស្បែកជើងធំពោ',
+    'ស្បែកជើងហាម',
+    'ស្បែកជើងក្រវ៉ាត់',
+    'ស្បែកជើងកែង',
+    'ស្បែកជើង Cross'
+  ];
+
   // Managed Categories & Model SKUs State
   const [customCategories, setCustomCategories] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error(e);
+      }
     }
-    return ['Sneakers', 'Formal & Loafers', 'Running & Athletic', 'Boots & Outdoor', 'Casual & Lifestyle'];
+    return DEFAULT_CATEGORIES;
   });
 
   const [customSkus, setCustomSkus] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SKUS);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error(e);
+      }
     }
-    return [];
+    return DEFAULT_SKUS;
   });
 
   // Derived merged lists (custom + current products)
@@ -204,6 +236,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (prev.includes(trimmed)) return prev;
       const updated = [...prev, trimmed];
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
       return updated;
     });
   };
@@ -214,6 +247,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCustomCategories(prev => {
       const updated = prev.map(c => c === oldName ? trimmedNew : c);
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
       return updated;
     });
     setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: trimmedNew } : p));
@@ -223,6 +257,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCustomCategories(prev => {
       const updated = prev.filter(c => c !== categoryName);
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
       return updated;
     });
     setProducts(prev => {
@@ -239,6 +274,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (prev.includes(trimmed)) return prev;
       const updated = [...prev, trimmed];
       localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
       return updated;
     });
   };
@@ -249,6 +285,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCustomSkus(prev => {
       const updated = prev.map(s => s === oldSku ? trimmedNew : s);
       localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
       return updated;
     });
     setProducts(prev => prev.map(p => p.sku === oldSku ? { ...p, sku: trimmedNew } : p));
@@ -258,6 +295,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCustomSkus(prev => {
       const updated = prev.filter(s => s !== skuCode);
       localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
       return updated;
     });
     setProducts(prev => prev.map(p => p.sku === skuCode ? { ...p, sku: '' } : p));
@@ -352,10 +390,26 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     );
 
+    const unsubStoreSettings = subscribeToStoreSettings((config) => {
+      if (config.customCategories && config.customCategories.length > 0) {
+        setCustomCategories(config.customCategories);
+        localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(config.customCategories));
+      } else {
+        saveStoreSettingsToFirestore({ customCategories: DEFAULT_CATEGORIES, customSkus: DEFAULT_SKUS });
+      }
+      if (config.customSkus && config.customSkus.length > 0) {
+        setCustomSkus(config.customSkus);
+        localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(config.customSkus));
+      } else {
+        saveStoreSettingsToFirestore({ customCategories: DEFAULT_CATEGORIES, customSkus: DEFAULT_SKUS });
+      }
+    });
+
     return () => {
       unsubProducts();
       unsubOrders();
       unsubPOs();
+      unsubStoreSettings();
     };
   }, []);
 

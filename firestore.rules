@@ -21,6 +21,10 @@ service cloud.firestore {
       allow write: if isValidId(poId);
     }
 
+    match /settings/{docId} {
+      allow read, write: if true;
+    }
+
     match /test/{docId} {
       allow read, write: if true;
     }
