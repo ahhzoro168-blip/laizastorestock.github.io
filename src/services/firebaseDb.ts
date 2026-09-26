@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { ShoeProduct, SaleOrder, PurchaseOrder } from '../types';
+import { compressImageDataUrl } from '../utils/imageCompressor';
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
@@ -126,7 +127,21 @@ function sanitizeForFirestore<T>(data: T): T {
  */
 export async function saveProductToFirestore(product: ShoeProduct): Promise<void> {
   const docRef = doc(db, 'products', product.id);
-  const cleanData = sanitizeForFirestore(product);
+  let cleanData = sanitizeForFirestore(product);
+
+  // Safeguard: If payload exceeds 400KB due to many base64 colorway images, compress them automatically
+  if (JSON.stringify(cleanData).length > 400000 && cleanData.colorImages) {
+    const compressedMap: Partial<Record<string, string>> = {};
+    for (const [col, img] of Object.entries(cleanData.colorImages)) {
+      if (img && typeof img === 'string' && img.startsWith('data:image')) {
+        compressedMap[col] = await compressImageDataUrl(img, 450, 0.60);
+      } else {
+        compressedMap[col] = img as string;
+      }
+    }
+    cleanData.colorImages = compressedMap as any;
+  }
+
   await setDoc(docRef, cleanData, { merge: true });
 }
 

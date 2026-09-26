@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, RefreshCw, X, Check, Image as ImageIcon } from 'lucide-react';
+import { compressImageDataUrl } from '../utils/imageCompressor';
 
 interface CameraCaptureModalProps {
   isOpen: boolean;
@@ -69,19 +70,33 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     }
   };
 
-  const takeSnapshot = () => {
+  const takeSnapshot = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    const maxDim = 500;
+    let w = video.videoWidth || 1280;
+    let h = video.videoHeight || 720;
+    if (w > maxDim || h > maxDim) {
+      if (w > h) {
+        h = Math.round((h * maxDim) / w);
+        w = maxDim;
+      } else {
+        w = Math.round((w * maxDim) / h);
+        h = maxDim;
+      }
+    }
+
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-    setCapturedImage(dataUrl);
+    ctx.drawImage(video, 0, 0, w, h);
+    const rawUrl = canvas.toDataURL('image/jpeg', 0.65);
+    const compressed = await compressImageDataUrl(rawUrl, 500, 0.65);
+    setCapturedImage(compressed);
   };
 
   const retake = () => {
