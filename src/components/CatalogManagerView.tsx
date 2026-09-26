@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Layers, 
+  Layers,
   Search, 
   Edit2, 
   Trash2, 
@@ -137,23 +137,6 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white font-['Syne']">
-              Model SKU & Category Manager
-            </h1>
-            <p className="text-xs text-slate-400">
-              Add, edit, or remove Model SKUs and Shoe Categories from scratch.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Tabs Switcher */}
       <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
         <button
