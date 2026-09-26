@@ -11,7 +11,8 @@ import {
   Cloud,
   CheckCircle2,
   RefreshCw,
-  Settings
+  Settings,
+  Layers
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { useGoogleAuth } from '../context/GoogleAuthContext';
@@ -41,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { id: 'inventory', label: 'Inventory', icon: <Package className="w-4 h-4" /> },
-    { id: 'pos', label: 'Sell & POS', icon: <ShoppingBag className="w-4 h-4" /> },
+    { id: 'pos', label: 'Walk-in Sell', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'tracking', label: 'Order Tracking', icon: <Truck className="w-4 h-4" /> },
     { id: 'seasonal', label: 'Seasonal Insights', icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> }

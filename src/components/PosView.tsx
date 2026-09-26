@@ -2,22 +2,18 @@ import React, { useState } from 'react';
 import { 
   ShoppingBag, 
   ShoppingCart,
-  MapPin, 
   CreditCard, 
   Search, 
   DollarSign, 
   CheckCircle2, 
   QrCode, 
-  Building2,
   Trash2,
   Printer,
   History,
   Plus,
   Minus,
   Check,
-  Globe,
-  Send,
-  Video,
+  Store,
   X
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
@@ -52,7 +48,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
   const [addFeedback, setAddFeedback] = useState(false);
 
   // Customer & Location - clean fields for production use
-  const [orderPlatform, setOrderPlatform] = useState<OrderPlatform>('Page');
+  const [orderPlatform, setOrderPlatform] = useState<OrderPlatform>('Walk-in');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [ownerPhone, setOwnerPhone] = useState('');
@@ -163,10 +159,10 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
           </div>
           <div>
             <h1 className="text-lg font-bold text-white font-['Syne']">
-              SoleTrack Fast Sell & POS Terminal
+              SoleTrack Walk-in Sell & POS Terminal
             </h1>
             <p className="text-xs text-slate-400">
-              Multi-product checkout, inventory deduction, and instant thermal receipt printing
+              Walk-in counter sales, multi-product checkout, instant inventory deduction, and receipt printing
             </p>
           </div>
         </div>
@@ -449,124 +445,31 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
 
             {/* Fast Register Form */}
             <form onSubmit={handleCheckout} className="space-y-3 pt-2">
-              {/* Order Platform Selector: Page, Telegram, TikTok */}
-              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setOrderPlatform('Page')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-                    orderPlatform === 'Page'
-                      ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>Page</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderPlatform('Telegram')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-                    orderPlatform === 'Telegram'
-                      ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Telegram</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderPlatform('TikTok')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-                    orderPlatform === 'TikTok'
-                      ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-                >
-                  <Video className="w-3.5 h-3.5" />
-                  <span>TikTok</span>
-                </button>
-              </div>
-
-              {/* Destination */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleLocationChange('Phnom Penh')}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 ${
-                      locationType === 'Phnom Penh'
-                        ? 'bg-amber-500 text-slate-950 font-bold'
-                        : 'bg-slate-950 border border-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <Building2 className="w-3 h-3" />
-                    <span>Phnom Penh</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLocationChange('Province')}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 ${
-                      locationType === 'Province'
-                        ? 'bg-amber-500 text-slate-950 font-bold'
-                        : 'bg-slate-950 border border-slate-800 text-slate-400'
-                    }`}
-                  >
-                    <MapPin className="w-3 h-3" />
-                    <span>Provinces</span>
-                  </button>
+              {/* Walk-in Store Purchase Section */}
+              <div className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-2">
+                <div className="text-[11px] font-semibold text-amber-400/90 flex items-center gap-1.5">
+                  <Store className="w-3.5 h-3.5" />
+                  <span>In-Store Walk-in Purchase</span>
                 </div>
-
-                {/* Delivery Address Input */}
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder={locationType === 'Phnom Penh' ? "Street Address / Drop-off location..." : "Province / Delivery Address..."}
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500"
-                  />
-                </div>
-              </div>
-
-              {/* Customer Information */}
-              <div className="space-y-2">
-                {locationType === 'Province' && (
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Sender Phone (Optional)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 017 249 041"
-                      value={ownerPhone}
-                      onChange={(e) => setOwnerPhone(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Customer Name</label>
+                    <label className="block text-[10px] text-slate-400 mb-0.5">Customer (Optional)</label>
                     <input
                       type="text"
-                      required
-                      placeholder="Customer name..."
+                      placeholder="Walk-in Customer"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Customer Phone</label>
+                    <label className="block text-[10px] text-slate-400 mb-0.5">Phone (Optional)</label>
                     <input
                       type="text"
-                      required
-                      placeholder="012 345 678"
+                      placeholder="Optional phone"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
                     />
                   </div>
                 </div>
@@ -585,8 +488,9 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                   onChange={(e) => handlePaymentChange(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
                 >
-                  <option value="Bank Transfer">Bank Transfer (Paid)</option>
-                  {locationType === 'Phnom Penh' && (
+                  <option value="Cash">Cash (In-Store)</option>
+                  <option value="Bank Transfer">Bank Transfer / KHQR (Paid)</option>
+                  {orderPlatform !== 'Walk-in' && locationType === 'Phnom Penh' && (
                     <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
                   )}
                 </select>
@@ -602,13 +506,17 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                   <span>Subtotal:</span>
                   <span className="font-mono text-white font-medium">${totalCartAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Delivery Fee:</span>
-                  <span className="font-mono text-white font-medium">$1.50</span>
-                </div>
+                {orderPlatform !== 'Walk-in' && (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Delivery Fee:</span>
+                    <span className="font-mono text-white font-medium">$1.50</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm font-black border-t border-slate-800 pt-1.5 text-white">
                   <span>Grand Total:</span>
-                  <span className="font-mono text-amber-400 text-base">${(totalCartAmount + 1.5).toFixed(2)}</span>
+                  <span className="font-mono text-amber-400 text-base">
+                    ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -624,7 +532,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                   </span>
                 </div>
                 <span className="font-mono font-black text-xs sm:text-sm bg-black/15 px-2 py-0.5 rounded-lg shrink-0">
-                  ${(totalCartAmount + 1.5).toFixed(2)}
+                  ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
                 </span>
               </button>
             </form>

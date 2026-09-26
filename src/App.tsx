@@ -128,7 +128,7 @@ const MainApp: React.FC = () => {
         )}
 
         {activeTab === 'settings' && (
-          <SettingsView />
+          <SettingsView onOpenAddModal={() => setIsAddModalOpen(true)} />
         )}
       </main>
 

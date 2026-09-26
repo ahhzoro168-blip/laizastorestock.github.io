@@ -5,18 +5,14 @@ import {
   Trash2, 
   Plus, 
   Minus, 
-  MapPin, 
   CreditCard, 
   QrCode, 
-  Building2, 
   User, 
   Phone, 
   AlertCircle, 
   CheckCircle2, 
   ArrowRight,
-  Globe,
-  Send,
-  Video
+  Store
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { 
@@ -70,7 +66,7 @@ export const CartModal: React.FC<CartModalProps> = ({
   } = useInventory();
 
   // Customer & Location - clean initial state
-  const [orderPlatform, setOrderPlatform] = useState<OrderPlatform>('Page');
+  const [orderPlatform, setOrderPlatform] = useState<OrderPlatform>('Walk-in');
   const [customerName, setCustomerName] = useState<string>('');
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [ownerPhone, setOwnerPhone] = useState<string>('');
@@ -309,138 +305,38 @@ export const CartModal: React.FC<CartModalProps> = ({
                 <form onSubmit={handleCheckout} className="space-y-4 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2">
-                      Buyer & Dispatch Logistics
+                      Store Checkout
                     </h3>
 
-                    {/* Order Acquisition Platform: Page, Telegram, TikTok */}
-                    <div className="grid grid-cols-3 gap-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => setOrderPlatform('Page')}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-                          orderPlatform === 'Page'
-                            ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                        }`}
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        <span>Page</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOrderPlatform('Telegram')}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-                          orderPlatform === 'Telegram'
-                            ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                        }`}
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Telegram</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOrderPlatform('TikTok')}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all ${
-                          orderPlatform === 'TikTok'
-                            ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                        }`}
-                      >
-                        <Video className="w-3.5 h-3.5" />
-                        <span>TikTok</span>
-                      </button>
-                    </div>
-
-                    {/* Dispatch Destination */}
-                    <div className="space-y-2">
-                      <label className="block text-[11px] font-semibold text-slate-400">
-                        Dispatch Destination
-                      </label>
-                      
-                      {/* Segmented Location Switch */}
-                      <div className="grid grid-cols-2 gap-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
-                        <button
-                          type="button"
-                          onClick={() => setLocationType('Phnom Penh')}
-                          className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                            locationType === 'Phnom Penh'
-                              ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                              : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          <Building2 className="w-3.5 h-3.5" />
-                          <span>Phnom Penh</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLocationType('Province')}
-                          className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                            locationType === 'Province'
-                              ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                              : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span>Provinces</span>
-                        </button>
+                    {/* Walk-in Simplified Section */}
+                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2.5">
+                      <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                        <Store className="w-4 h-4" />
+                        <span>In-Store Counter Sale</span>
                       </div>
-
-                      {/* Address input text box */}
-                      <div>
-                        <input
-                          type="text"
-                          required
-                          placeholder={locationType === 'Phnom Penh' ? "Street Address / Drop-off location..." : "Province / Delivery Address..."}
-                          value={deliveryAddress}
-                          onChange={(e) => setDeliveryAddress(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400 placeholder-slate-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Customer Name, Phone & Sender Phone (if Province) */}
-                    <div className="space-y-2.5">
-                      {locationType === 'Province' && (
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                            Sender Phone (Optional)
+                            Customer (Optional)
                           </label>
                           <input
                             type="text"
-                            placeholder="e.g. 017 249 041"
-                            value={ownerPhone}
-                            onChange={(e) => setOwnerPhone(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
-                          />
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                            Customer Name
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Customer name..."
+                            placeholder="Walk-in Customer"
                             value={customerName}
                             onChange={(e) => setCustomerName(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
                           />
                         </div>
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                            Customer Phone
+                            Phone (Optional)
                           </label>
                           <input
                             type="text"
-                            required
-                            placeholder="012 345 678"
+                            placeholder="Optional phone"
                             value={customerPhone}
                             onChange={(e) => setCustomerPhone(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
                           />
                         </div>
                       </div>
@@ -465,9 +361,16 @@ export const CartModal: React.FC<CartModalProps> = ({
                         onChange={(e) => handlePaymentMethodChange(e.target.value)}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
                       >
-                        {(locationType === 'Phnom Penh' ? PHNOM_PENH_PAYMENTS : PROVINCE_PAYMENTS).map(pm => (
-                          <option key={pm} value={pm}>{pm}</option>
-                        ))}
+                        {orderPlatform === 'Walk-in' ? (
+                          <>
+                            <option value="Cash">Cash (In-Store)</option>
+                            <option value="Bank Transfer">Bank Transfer / KHQR (Paid)</option>
+                          </>
+                        ) : (
+                          (locationType === 'Phnom Penh' ? PHNOM_PENH_PAYMENTS : PROVINCE_PAYMENTS).map(pm => (
+                            <option key={pm} value={pm}>{pm}</option>
+                          ))
+                        )}
                       </select>
                     </div>
                   </div>
@@ -482,13 +385,17 @@ export const CartModal: React.FC<CartModalProps> = ({
                       <span>Subtotal:</span>
                       <span className="font-mono text-white">${totalCartAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Delivery Fee:</span>
-                      <span className="font-mono text-white font-medium">$1.50</span>
-                    </div>
+                    {orderPlatform !== 'Walk-in' && (
+                      <div className="flex justify-between text-slate-400">
+                        <span>Delivery Fee:</span>
+                        <span className="font-mono text-white font-medium">$1.50</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm font-black border-t border-slate-800 pt-2 text-white">
                       <span>Grand Total (USD):</span>
-                      <span className="font-mono text-base text-amber-400">${(totalCartAmount + 1.5).toFixed(2)}</span>
+                      <span className="font-mono text-base text-amber-400">
+                        ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
+                      </span>
                     </div>
                   </div>
 
@@ -504,7 +411,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       </span>
                     </div>
                     <span className="font-mono font-black text-xs sm:text-sm bg-black/15 px-2.5 py-1 rounded-lg shrink-0">
-                      ${(totalCartAmount + 1.5).toFixed(2)}
+                      ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
                     </span>
                   </button>
                 </form>

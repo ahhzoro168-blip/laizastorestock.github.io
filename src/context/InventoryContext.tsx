@@ -91,6 +91,15 @@ interface InventoryContextType {
   generateAutomatedPO: (supplierName?: string) => PurchaseOrder | null;
   updatePOStatus: (poId: string, status: POStatus) => void;
   updateOrderStatus: (orderId: string, newStatus: OrderStatus, note?: string, location?: string, courierName?: string, courierPhone?: string) => void;
+  categories: string[];
+  modelSkus: string[];
+  addCategory: (categoryName: string) => void;
+  updateCategory: (oldName: string, newName: string) => void;
+  deleteCategory: (categoryName: string) => void;
+  addModelSku: (skuCode: string) => void;
+  updateModelSku: (oldSku: string, newSku: string) => void;
+  deleteModelSku: (skuCode: string) => void;
+  clearOldDefaults: () => void;
   resetDemoData: () => void;
   clearAllData: () => void;
   restoreAllData: (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => void;
@@ -103,6 +112,8 @@ const STORAGE_KEY_PRODUCTS = 'soletrack_products_v2';
 const STORAGE_KEY_ORDERS = 'soletrack_orders_v2';
 const STORAGE_KEY_PO = 'soletrack_po_v2';
 const STORAGE_KEY_CART = 'soletrack_cart_v2';
+const STORAGE_KEY_CATEGORIES = 'soletrack_categories_v2';
+const STORAGE_KEY_SKUS = 'soletrack_skus_v2';
 
 // Purge obsolete demo keys from browser storage once
 if (typeof window !== 'undefined') {
@@ -157,6 +168,109 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   });
 
   const [isCloudConnected, setIsCloudConnected] = useState<boolean>(true);
+
+  // Managed Categories & Model SKUs State
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return ['Sneakers', 'Formal & Loafers', 'Running & Athletic', 'Boots & Outdoor', 'Casual & Lifestyle'];
+  });
+
+  const [customSkus, setCustomSkus] = useState<string[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_SKUS);
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return [];
+  });
+
+  // Derived merged lists (custom + current products)
+  const categories = Array.from(new Set([
+    ...customCategories,
+    ...products.map(p => p.category).filter(Boolean)
+  ]));
+
+  const modelSkus = Array.from(new Set([
+    ...customSkus,
+    ...products.map(p => p.sku).filter(Boolean)
+  ]));
+
+  const addCategory = (categoryName: string) => {
+    const trimmed = categoryName.trim();
+    if (!trimmed) return;
+    setCustomCategories(prev => {
+      if (prev.includes(trimmed)) return prev;
+      const updated = [...prev, trimmed];
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const updateCategory = (oldName: string, newName: string) => {
+    const trimmedNew = newName.trim();
+    if (!trimmedNew || oldName === trimmedNew) return;
+    setCustomCategories(prev => {
+      const updated = prev.map(c => c === oldName ? trimmedNew : c);
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      return updated;
+    });
+    setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: trimmedNew } : p));
+  };
+
+  const deleteCategory = (categoryName: string) => {
+    setCustomCategories(prev => {
+      const updated = prev.filter(c => c !== categoryName);
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+      return updated;
+    });
+    setProducts(prev => {
+      const remaining = customCategories.filter(c => c !== categoryName);
+      const fallback = remaining[0] || 'General';
+      return prev.map(p => p.category === categoryName ? { ...p, category: fallback } : p);
+    });
+  };
+
+  const addModelSku = (skuCode: string) => {
+    const trimmed = skuCode.trim().toUpperCase();
+    if (!trimmed) return;
+    setCustomSkus(prev => {
+      if (prev.includes(trimmed)) return prev;
+      const updated = [...prev, trimmed];
+      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const updateModelSku = (oldSku: string, newSku: string) => {
+    const trimmedNew = newSku.trim().toUpperCase();
+    if (!trimmedNew || oldSku === trimmedNew) return;
+    setCustomSkus(prev => {
+      const updated = prev.map(s => s === oldSku ? trimmedNew : s);
+      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      return updated;
+    });
+    setProducts(prev => prev.map(p => p.sku === oldSku ? { ...p, sku: trimmedNew } : p));
+  };
+
+  const deleteModelSku = (skuCode: string) => {
+    setCustomSkus(prev => {
+      const updated = prev.filter(s => s !== skuCode);
+      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+      return updated;
+    });
+    setProducts(prev => prev.map(p => p.sku === skuCode ? { ...p, sku: '' } : p));
+  };
+
+  const clearOldDefaults = () => {
+    setCustomCategories([]);
+    setCustomSkus([]);
+    localStorage.removeItem(STORAGE_KEY_CATEGORIES);
+    localStorage.removeItem(STORAGE_KEY_SKUS);
+    // Remove sample default products matching old sample SKUs if any exist
+    setProducts(prev => prev.filter(p => !p.sku.startsWith('SHOE-') && !p.sku.startsWith('ST-DEMO')));
+  };
 
   // Real-time synchronization across devices (PC, Phone, iPad, and GitHub site)
   useEffect(() => {
@@ -934,6 +1048,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         generateAutomatedPO,
         updatePOStatus,
         updateOrderStatus,
+        categories,
+        modelSkus,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        addModelSku,
+        updateModelSku,
+        deleteModelSku,
+        clearOldDefaults,
         resetDemoData,
         clearAllData,
         restoreAllData,

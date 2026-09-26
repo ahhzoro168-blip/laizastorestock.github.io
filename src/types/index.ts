@@ -49,7 +49,7 @@ export interface ShoeProduct {
 
 export type LocationType = 'Phnom Penh' | 'Province';
 
-export type OrderPlatform = 'Page' | 'Telegram' | 'TikTok';
+export type OrderPlatform = 'Walk-in' | 'Page' | 'Telegram' | 'TikTok';
 
 export type PhnomPenhPaymentMethod = 'Bank Transfer' | 'Cash on Delivery (COD)';
 

@@ -40,11 +40,11 @@ interface ColorwayDraft {
 }
 
 const INITIAL_SIZES = [
-  { size: 40, stock: 6 },
-  { size: 41, stock: 6 },
-  { size: 42, stock: 6 },
-  { size: 43, stock: 6 },
-  { size: 44, stock: 6 },
+  { size: 40, stock: 0 },
+  { size: 41, stock: 0 },
+  { size: 42, stock: 0 },
+  { size: 43, stock: 0 },
+  { size: 44, stock: 0 },
 ];
 
 export const COLOR_PRESETS = [
@@ -88,7 +88,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const { products, addProduct } = useInventory();
+  const { 
+    products, 
+    addProduct, 
+    categories: registeredCategories, 
+    modelSkus: registeredSkus
+  } = useInventory();
   const { user, uploadProductPhoto, syncDataToGoogle } = useGoogleAuth();
   const [isSavingWithDrive, setIsSavingWithDrive] = useState(false);
 
@@ -96,24 +101,15 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [name, setName] = useState('');
   const [gender, setGender] = useState<ShoeGender>('men');
   
-  // Model SKUs & Add New SKU State
-  const initialSkus = Array.from(new Set(products.map(p => p.sku).filter(Boolean)));
-  const [skuList, setSkuList] = useState<string[]>(initialSkus.length > 0 ? initialSkus : ['SHOE-01']);
-  const [sku, setSku] = useState<string>(initialSkus[0] || 'SHOE-01');
-  const [isAddingSku, setIsAddingSku] = useState(false);
-  const [newSkuInput, setNewSkuInput] = useState('');
+  // Model SKUs & Category State
+  const skuList = registeredSkus;
+  const [sku, setSku] = useState<string>(registeredSkus[0] || '');
 
-  // Categories & Add New Category State
-  const existingCategories = Array.from(
-    new Set([...DEFAULT_CATEGORIES, ...products.map(p => p.category).filter(Boolean)])
-  );
-  const [categories, setCategories] = useState<string[]>(existingCategories);
-  const [category, setCategory] = useState<string>(existingCategories[0] || 'Sneakers');
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const categories = registeredCategories;
+  const [category, setCategory] = useState<string>(registeredCategories[0] || '');
 
-  const [costPrice, setCostPrice] = useState<number>(100000);
-  const [retailPrice, setRetailPrice] = useState<number>(220000);
+  const [costPrice, setCostPrice] = useState<number>(0);
+  const [retailPrice, setRetailPrice] = useState<number>(0);
 
   // Camera State for Colorways
   const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
@@ -152,28 +148,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setIsCameraOpen(false);
   };
 
-  const handleAddNewCategory = () => {
-    const trimmed = newCategoryInput.trim();
-    if (!trimmed) return;
-    if (!categories.includes(trimmed)) {
-      setCategories(prev => [...prev, trimmed]);
-    }
-    setCategory(trimmed);
-    setNewCategoryInput('');
-    setIsAddingCategory(false);
-  };
-
-  const handleAddNewSku = () => {
-    const trimmed = newSkuInput.trim().toUpperCase();
-    if (!trimmed) return;
-    if (!skuList.includes(trimmed)) {
-      setSkuList(prev => [...prev, trimmed]);
-    }
-    setSku(trimmed);
-    setNewSkuInput('');
-    setIsAddingSku(false);
-  };
-
   // Gender Change & Automatic Size Reconfiguration
   const handleGenderChange = (newGender: 'men' | 'women') => {
     setGender(newGender);
@@ -185,7 +159,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       ...cw,
       sizes: targetSizeNumbers.map(sz => {
         const existing = cw.sizes.find(s => s.size === sz);
-        return { size: sz, stock: existing ? existing.stock : 6 };
+        return { size: sz, stock: existing ? existing.stock : 0 };
       })
     })));
   };
@@ -204,7 +178,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       colorName: nameToUse,
       colorHex: hexToUse,
       image: '',
-      sizes: currentSizes.map(sz => ({ size: sz, stock: 6 }))
+      sizes: currentSizes.map(sz => ({ size: sz, stock: 0 }))
     };
     setColorways(prev => [...prev, newCw]);
     setNewColorwayName('ខៀវ');
@@ -234,7 +208,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setColorways(prev => prev.map(cw => {
       if (cw.id !== colorwayId) return cw;
       if (cw.sizes.some(s => s.size === sizeNum)) return cw;
-      const updatedSizes = [...cw.sizes, { size: sizeNum, stock: 6 }].sort((a, b) => a.size - b.size);
+      const updatedSizes = [...cw.sizes, { size: sizeNum, stock: 0 }].sort((a, b) => a.size - b.size);
       return { ...cw, sizes: updatedSizes };
     }));
   };
@@ -321,8 +295,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       sku: finalSku,
       gender,
       category,
-      costPrice: Number(costPrice) || 20,
-      retailPrice: Number(retailPrice) || 45,
+      costPrice: Number(costPrice) || 0,
+      retailPrice: Number(retailPrice) || 0,
       images: defaultShoeImg,
       colorImages: colorImagesMap,
       description: `Modern ${category.toLowerCase()} crafted for superior durability, breathability, and all-day comfort.`,
@@ -444,52 +418,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-
-                  {/* Add New SKU form or button below SKU box */}
-                  {isAddingSku ? (
-                    <div className="mt-2 flex items-center gap-1.5 animate-in fade-in">
-                      <input
-                        type="text"
-                        placeholder="e.g. AV-MS-05"
-                        value={newSkuInput}
-                        onChange={(e) => setNewSkuInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddNewSku();
-                          }
-                        }}
-                        className="flex-1 bg-slate-950 border border-amber-500/50 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddNewSku}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-colors"
-                      >
-                        Add
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingSku(false);
-                          setNewSkuInput('');
-                        }}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingSku(true)}
-                      className="mt-2 text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors group"
-                    >
-                      <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                      <span>Add New SKU</span>
-                    </button>
-                  )}
                 </div>
 
                 {/* Shoe Category */}
@@ -506,52 +434,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-
-                  {/* Add New Category form or button below category box */}
-                  {isAddingCategory ? (
-                    <div className="mt-2 flex items-center gap-1.5 animate-in fade-in">
-                      <input
-                        type="text"
-                        placeholder="New Category name..."
-                        value={newCategoryInput}
-                        onChange={(e) => setNewCategoryInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddNewCategory();
-                          }
-                        }}
-                        className="flex-1 bg-slate-950 border border-amber-500/50 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddNewCategory}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg transition-colors"
-                      >
-                        Add
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingCategory(false);
-                          setNewCategoryInput('');
-                        }}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingCategory(true)}
-                      className="mt-2 text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors group"
-                    >
-                      <Plus className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                      <span>Add New Category</span>
-                    </button>
-                  )}
                 </div>
               </div>
 

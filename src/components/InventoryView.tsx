@@ -627,7 +627,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onOpenCart,
   onOpenAddModal
 }) => {
-  const { products, cart, totalCartItems, totalCartAmount } = useInventory();
+  const { products, categories: registeredCategories, cart, totalCartItems, totalCartAmount } = useInventory();
   const handleOpenCartModal = (product?: ShoeProduct, size?: number, color?: ShoeColor) => {
     if (onOpenCart) {
       onOpenCart(product, size, color);
@@ -878,60 +878,96 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         )}
       </div>
 
-      {/* Results Header & Actions Bar (Add New & View Options) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-        <div className="order-2 sm:order-1 flex items-center gap-2 text-xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-            {filteredProducts.length} shoe models
-          </span>
-          <span aria-hidden="true" className="text-slate-600">·</span>
-          <span className="text-[11px] font-medium text-slate-400">
-            {filteredProducts.reduce((sum, p) => sum + p.totalStock, 0)} total pairs in warehouse
-          </span>
-        </div>
+      {/* Results Header, Category Pills & Actions Bar */}
+      <div className="space-y-3 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="order-2 sm:order-1 flex items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+              {filteredProducts.length} shoe models
+            </span>
+            <span aria-hidden="true" className="text-slate-600">·</span>
+            <span className="text-[11px] font-medium text-slate-400">
+              {filteredProducts.reduce((sum, p) => sum + p.totalStock, 0)} total pairs in warehouse
+            </span>
+          </div>
 
-        <div className="order-1 sm:order-2 flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
-          {/* Add New Product Button on the left side */}
-          <button
-            type="button"
-            onClick={onOpenAddModal}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-amber-500/20 active:scale-95 shrink-0"
-            title="Register new footwear product"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>Add New</span>
-          </button>
-
-          {/* 2 View Options Toggle (Grid & List) on the right side */}
-          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 gap-1 shrink-0">
+          <div className="order-1 sm:order-2 flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
+            {/* Add New Product Button on the left side */}
             <button
               type="button"
-              onClick={() => setDisplayMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${
-                displayMode === 'grid'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-              title="Grid View"
-              aria-label="Grid View"
+              onClick={onOpenAddModal}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-amber-500/20 active:scale-95 shrink-0 cursor-pointer"
+              title="Register new footwear product"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>Add New</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setDisplayMode('list')}
-              className={`p-1.5 rounded-lg transition-all ${
-                displayMode === 'list'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-              title="List View"
-              aria-label="List View"
-            >
-              <List className="w-4 h-4" />
-            </button>
+
+            {/* 2 View Options Toggle (Grid & List) on the right side */}
+            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDisplayMode('grid')}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  displayMode === 'grid'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+                title="Grid View"
+                aria-label="Grid View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayMode('list')}
+                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                  displayMode === 'list'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+                title="List View"
+                aria-label="List View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Category Pills horizontal bar below shoe models count */}
+        {registeredCategories.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                selectedCategory === 'all'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              All Categories
+            </button>
+            {registeredCategories.map(cat => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* View 1: Card Grid View */}

@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Store, Shield, Database, Download, Upload, RefreshCcw, Check, Bell, Globe, DollarSign } from 'lucide-react';
+import { Settings as SettingsIcon, Store, Shield, Database, Download, Upload, RefreshCcw, Check, Bell, Globe, DollarSign, Layers } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
+import { CatalogManagerView } from './CatalogManagerView';
 
-export const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  onOpenAddModal?: () => void;
+}
+
+export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal }) => {
   const { products, clearAllData } = useInventory();
+  const [activeSettingsSection, setActiveSettingsSection] = useState<'catalog' | 'general'>('catalog');
   const [storeName, setStoreName] = useState('Laiza Store');
   const [storePhone, setStorePhone] = useState('017 249 041');
   const [currency, setCurrency] = useState('USD ($)');
@@ -48,7 +54,7 @@ export const SettingsView: React.FC = () => {
               Store Settings & Control Center
             </h1>
             <p className="text-xs text-slate-400">
-              Manage store profile, currency, POS preferences, and data backups
+              Manage Model SKUs, Shoe Categories, store profile, currency, and data backups
             </p>
           </div>
         </div>
@@ -60,7 +66,43 @@ export const SettingsView: React.FC = () => {
         )}
       </div>
 
-      <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Settings Sub-Tab Navigation */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveSettingsSection('catalog')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeSettingsSection === 'catalog'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Model SKU & Categories</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSettingsSection('general')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeSettingsSection === 'general'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+          }`}
+        >
+          <Store className="w-4 h-4" />
+          <span>General Store Preferences</span>
+        </button>
+      </div>
+
+      {/* SECTION 1: MODEL SKU & CATEGORIES */}
+      {activeSettingsSection === 'catalog' && (
+        <CatalogManagerView onOpenAddModal={onOpenAddModal || (() => {})} />
+      )}
+
+      {/* SECTION 2: GENERAL STORE PREFERENCES */}
+      {activeSettingsSection === 'general' && (
+        <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Left 2 Cols: General & POS Settings */}
         <div className="md:col-span-2 space-y-6">
@@ -215,6 +257,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
       </form>
+      )}
     </div>
   );
 };
