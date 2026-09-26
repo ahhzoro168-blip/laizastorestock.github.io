@@ -334,10 +334,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 transition-all">
-      <div className="w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200">
+      <div className="w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200">
         
         {/* Mobile Drag Indicator */}
-        <div className="w-12 h-1 bg-slate-700/80 rounded-full mx-auto mt-2 sm:hidden shrink-0" />
+        <div className="w-12 h-1 bg-slate-700/80 rounded-full mx-auto my-2 sm:hidden shrink-0" />
 
         {/* Modal Header */}
         <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
@@ -386,7 +386,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleGenderChange('men')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                   gender === 'men'
                     ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm'
                     : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
@@ -397,7 +397,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleGenderChange('women')}
-                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                   gender === 'women'
                     ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm'
                     : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
@@ -414,31 +414,37 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <label className="block text-xs font-bold text-slate-300 mb-1">
                 Model SKU
               </label>
-              <select
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              >
-                <option value="">-- Select SKU --</option>
-                {skuList.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
+                >
+                  <option value="">-- Select SKU --</option>
+                  {skuList.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
                 Shoe Category
               </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              >
-                {categories.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
+                >
+                  {categories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
 

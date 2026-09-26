@@ -319,27 +319,44 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const unsubProducts = subscribeToProducts(
       (cloudProducts) => {
         setIsCloudConnected(true);
-        if (cloudProducts.length > 0) {
-          setProducts(cloudProducts.map(p => ({
+
+        // Read local storage to preserve any items created locally that haven't synchronized to Firestore yet
+        let localProducts: ShoeProduct[] = [];
+        const localSaved = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+        if (localSaved) {
+          try {
+            localProducts = JSON.parse(localSaved);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        const cloudMap = new Map(cloudProducts.map(p => [p.id, p]));
+
+        // Find local items that are NOT in cloud yet
+        const pendingLocalItems = localProducts.filter(p => !cloudMap.has(p.id));
+
+        if (pendingLocalItems.length > 0) {
+          // Re-sync missing local items to Firestore automatically so they never get lost
+          pendingLocalItems.forEach(item => {
+            saveProductToFirestore(item).catch(err => console.error('Failed re-syncing local product to Firestore:', err));
+          });
+        }
+
+        // Merge cloud products with pending local items
+        const mergedProducts = [
+          ...cloudProducts.map(p => ({
             ...p,
             totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0)
-          })));
+          })),
+          ...pendingLocalItems
+        ];
+
+        if (mergedProducts.length > 0) {
+          setProducts(mergedProducts);
+          localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(mergedProducts));
         } else if (initialCloudProductsLoaded) {
           setProducts([]);
-        } else if (!initialCloudProductsLoaded) {
-          // If cloud is empty but local storage has items (e.g. from user's current PC session),
-          // seed them up to Firestore so all devices (phone, iPad, web) see them immediately!
-          const localSaved = localStorage.getItem(STORAGE_KEY_PRODUCTS);
-          if (localSaved) {
-            try {
-              const localParsed: ShoeProduct[] = JSON.parse(localSaved);
-              if (localParsed.length > 0) {
-                seedLocalItemsToFirestore(localParsed, [], []);
-              }
-            } catch (e) {
-              console.error(e);
-            }
-          }
         }
         initialCloudProductsLoaded = true;
       },
@@ -350,20 +367,29 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const unsubOrders = subscribeToOrders(
       (cloudOrders) => {
-        if (cloudOrders.length > 0) {
-          setOrders(cloudOrders);
-        } else if (!initialCloudOrdersLoaded) {
-          const localSaved = localStorage.getItem(STORAGE_KEY_ORDERS);
-          if (localSaved) {
-            try {
-              const localParsed: SaleOrder[] = JSON.parse(localSaved);
-              if (localParsed.length > 0) {
-                seedLocalItemsToFirestore([], localParsed, []);
-              }
-            } catch (e) {
-              console.error(e);
-            }
+        let localOrders: SaleOrder[] = [];
+        const localSaved = localStorage.getItem(STORAGE_KEY_ORDERS);
+        if (localSaved) {
+          try {
+            localOrders = JSON.parse(localSaved);
+          } catch (e) {
+            console.error(e);
           }
+        }
+
+        const cloudMap = new Map(cloudOrders.map(o => [o.id, o]));
+        const pendingLocal = localOrders.filter(o => !cloudMap.has(o.id));
+
+        if (pendingLocal.length > 0) {
+          pendingLocal.forEach(o => {
+            saveOrderToFirestore(o).catch(e => console.error('Failed re-syncing order to Firestore:', e));
+          });
+        }
+
+        const merged = [...cloudOrders, ...pendingLocal];
+        if (merged.length > 0) {
+          setOrders(merged);
+          localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(merged));
         }
         initialCloudOrdersLoaded = true;
       }
@@ -371,20 +397,29 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const unsubPOs = subscribeToPurchaseOrders(
       (cloudPOs) => {
-        if (cloudPOs.length > 0) {
-          setPurchaseOrders(cloudPOs);
-        } else if (!initialCloudPOsLoaded) {
-          const localSaved = localStorage.getItem(STORAGE_KEY_PO);
-          if (localSaved) {
-            try {
-              const localParsed: PurchaseOrder[] = JSON.parse(localSaved);
-              if (localParsed.length > 0) {
-                seedLocalItemsToFirestore([], [], localParsed);
-              }
-            } catch (e) {
-              console.error(e);
-            }
+        let localPOs: PurchaseOrder[] = [];
+        const localSaved = localStorage.getItem(STORAGE_KEY_PO);
+        if (localSaved) {
+          try {
+            localPOs = JSON.parse(localSaved);
+          } catch (e) {
+            console.error(e);
           }
+        }
+
+        const cloudMap = new Map(cloudPOs.map(po => [po.id, po]));
+        const pendingLocal = localPOs.filter(po => !cloudMap.has(po.id));
+
+        if (pendingLocal.length > 0) {
+          pendingLocal.forEach(po => {
+            savePOToFirestore(po).catch(e => console.error('Failed re-syncing PO to Firestore:', e));
+          });
+        }
+
+        const merged = [...cloudPOs, ...pendingLocal];
+        if (merged.length > 0) {
+          setPurchaseOrders(merged);
+          localStorage.setItem(STORAGE_KEY_PO, JSON.stringify(merged));
         }
         initialCloudPOsLoaded = true;
       }
