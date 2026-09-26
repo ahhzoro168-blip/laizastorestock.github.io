@@ -36,9 +36,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenGoogleSync
 }) => {
-  const { lowStockItems, totalCartItems } = useInventory();
+  const { lowStockItems, totalCartItems, syncAllLocalToCloud } = useInventory();
   const { user, syncStatus, isSyncing, lastSyncTime } = useGoogleAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [isForceSyncing, setIsForceSyncing] = React.useState(false);
+
+  const handleForceSync = async () => {
+    setIsForceSyncing(true);
+    await syncAllLocalToCloud();
+    setTimeout(() => setIsForceSyncing(false), 1000);
+  };
 
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { id: 'inventory', label: 'Inventory', icon: <Package className="w-4 h-4" /> },
@@ -90,17 +97,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action: Cart button & Mobile Menu Toggle */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Multi-Device Live Sync Indicator */}
-          <div 
-            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold"
-            title="Real-time multi-device sync active across PC, Phone, iPad, and Web"
+          {/* Multi-Device Live Sync Indicator & Force Sync Button */}
+          <button
+            type="button"
+            onClick={handleForceSync}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 text-amber-400 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+            title="Instant multi-device cloud sync (Phone, PC, Tablet)"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>All Devices Synced</span>
-          </div>
+            <RefreshCw className={`w-3.5 h-3.5 ${isForceSyncing ? 'animate-spin text-emerald-400' : ''}`} />
+            <span className="hidden sm:inline">Sync Cloud</span>
+          </button>
 
           {/* Desktop Drive & Sheets Menu Button */}
           {onOpenGoogleSync && (

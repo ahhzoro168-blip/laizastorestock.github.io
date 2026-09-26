@@ -105,6 +105,7 @@ interface InventoryContextType {
   resetDemoData: () => void;
   clearAllData: () => void;
   restoreAllData: (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => void;
+  syncAllLocalToCloud: () => Promise<void>;
   isCloudConnected: boolean;
 }
 
@@ -1142,6 +1143,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const syncAllLocalToCloud = async () => {
+    try {
+      await seedLocalItemsToFirestore(products, orders, purchaseOrders);
+      console.log('Successfully synced all local items to Firestore!');
+    } catch (e) {
+      console.error('Failed syncing local items to cloud:', e);
+    }
+  };
+
   const resetDemoData = clearAllData;
 
   return (
@@ -1185,6 +1195,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         resetDemoData,
         clearAllData,
         restoreAllData,
+        syncAllLocalToCloud,
         isCloudConnected
       }}
     >
