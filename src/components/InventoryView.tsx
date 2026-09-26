@@ -194,7 +194,7 @@ const ProductGridCard: React.FC<{
                   {product.sku}
                 </span>
               </div>
-              <h3 className="font-semibold text-sm text-slate-100 leading-snug line-clamp-2" title={product.name}>
+              <h3 className="font-extrabold text-lg sm:text-xl text-white leading-tight line-clamp-2" title={product.name}>
                 {product.name}
               </h3>
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -229,6 +229,7 @@ const ProductGridCard: React.FC<{
                     .filter(v => v.color === color)
                     .reduce((sum, v) => sum + v.stock, 0);
                   const style = getColorStyle(color);
+                  const customHex = product.colorHexes?.[color];
 
                   return (
                     <button
@@ -242,7 +243,14 @@ const ProductGridCard: React.FC<{
                       }`}
                       title={`Select ${color} (${colorTotal} pairs)`}
                     >
-                      <span className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${style.bg} ${style.border} border ring-1 ring-black/50 shadow-sm shrink-0`} />
+                      {customHex ? (
+                        <span 
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-white/30 shadow-sm shrink-0" 
+                          style={{ backgroundColor: customHex }}
+                        />
+                      ) : (
+                        <span className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${style.bg} ${style.border} border ring-1 ring-black/50 shadow-sm shrink-0`} />
+                      )}
                       <span className="leading-tight">{color}</span>
                     </button>
                   );
@@ -449,7 +457,7 @@ const ProductListCard: React.FC<{
               </span>
             </div>
 
-            <h3 className="font-semibold text-sm sm:text-base text-slate-100 leading-snug line-clamp-2" title={product.name}>
+            <h3 className="font-extrabold text-base sm:text-lg text-white leading-snug line-clamp-2" title={product.name}>
               {product.name}
             </h3>
           </div>

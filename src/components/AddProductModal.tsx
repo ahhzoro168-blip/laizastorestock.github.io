@@ -273,12 +273,17 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       }
     }
 
-    // Build colorImages mapping and pick primary image
+    // Build colorImages & colorHexes mapping and pick primary image
     const colorImagesMap: Partial<Record<ShoeColor, string>> = {};
+    const colorHexesMap: Partial<Record<ShoeColor, string>> = {};
     let firstAvailableColorImage = '';
     updatedColorways.forEach(cw => {
+      const cleanColorName = cw.colorName.trim();
+      if (cleanColorName) {
+        colorHexesMap[cleanColorName as ShoeColor] = cw.colorHex || getColorHex(cleanColorName);
+      }
       if (cw.image) {
-        colorImagesMap[cw.colorName as ShoeColor] = cw.image;
+        colorImagesMap[cleanColorName as ShoeColor] = cw.image;
         if (!firstAvailableColorImage) {
           firstAvailableColorImage = cw.image;
         }
@@ -315,6 +320,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       retailPrice: parsedRetailPrice,
       images: defaultShoeImg,
       colorImages: colorImagesMap,
+      colorHexes: colorHexesMap,
       variants: generatedVariants,
       description: `${name.trim()} footwear product.`,
       specifications: {

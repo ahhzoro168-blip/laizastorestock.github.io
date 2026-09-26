@@ -38,6 +38,7 @@ export interface ShoeProduct {
   retailPrice: number;
   images: string[];
   colorImages?: Partial<Record<ShoeColor, string>>;
+  colorHexes?: Partial<Record<ShoeColor, string>>;
   description: string;
   specifications: ShoeSpecifications;
   variants: ShoeVariant[];

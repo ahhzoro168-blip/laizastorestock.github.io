@@ -458,7 +458,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           </span>
                         )}
                       </div>
-                      <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
                         {product.name}
                       </h1>
                       <div className="mt-1 flex flex-col">
@@ -503,7 +503,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${COLOR_STYLES[color]?.bg} ${COLOR_STYLES[color]?.ring} border border-slate-700`} />
+                              {product.colorHexes?.[color] ? (
+                                <span 
+                                  className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/30 shadow-sm" 
+                                  style={{ backgroundColor: product.colorHexes[color] }}
+                                />
+                              ) : (
+                                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${COLOR_STYLES[color]?.bg || 'bg-amber-500'} ${COLOR_STYLES[color]?.ring || 'ring-amber-400'} border border-slate-700`} />
+                              )}
                               <span className="text-xs font-medium truncate">{color}</span>
                             </div>
                             <span className="text-[11px] font-mono text-slate-400 shrink-0">{colorStock}</span>
