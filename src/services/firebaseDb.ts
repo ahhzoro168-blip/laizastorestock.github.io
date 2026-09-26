@@ -16,8 +16,8 @@ import { compressImageDataUrl } from '../utils/imageCompressor';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Use the specific firestoreDatabaseId if configured, else default
-export const db = firebaseConfig.firestoreDatabaseId 
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+export const db = (firebaseConfig as any).firestoreDatabaseId 
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
   : getFirestore(app);
 
 // Connection test on initial boot per Firebase integration guidelines
@@ -34,6 +34,30 @@ export async function testFirestoreConnection(): Promise<boolean> {
 }
 
 testFirestoreConnection();
+
+let quotaWarningLogged = false;
+
+function handleFirestoreError(context: string, err: any, onError?: (err: Error) => void) {
+  const errMsg = err?.message || String(err || '');
+  const isQuota = errMsg.includes('Quota limit exceeded') || errMsg.includes('RESOURCE_EXHAUSTED') || err?.code === 'resource-exhausted';
+
+  if (isQuota) {
+    if (!quotaWarningLogged) {
+      console.warn(`[Firestore Quota] ${context}: Daily quota reached. App operating seamlessly in offline local mode.`);
+      quotaWarningLogged = true;
+    }
+  } else {
+    console.warn(`[Firestore ${context}]`, err);
+  }
+
+  if (onError) {
+    try {
+      onError(err);
+    } catch (e) {
+      // ignore
+    }
+  }
+}
 
 /**
  * Real-time listener for Shoe Products across all devices
@@ -55,8 +79,7 @@ export function subscribeToProducts(
       onUpdate(items);
     },
     (err) => {
-      console.error('Firestore products snapshot error:', err);
-      if (onError) onError(err);
+      handleFirestoreError('products snapshot', err, onError);
     }
   );
 }
@@ -80,8 +103,7 @@ export function subscribeToOrders(
       onUpdate(items);
     },
     (err) => {
-      console.error('Firestore orders snapshot error:', err);
-      if (onError) onError(err);
+      handleFirestoreError('orders snapshot', err, onError);
     }
   );
 }
@@ -105,8 +127,7 @@ export function subscribeToPurchaseOrders(
       onUpdate(items);
     },
     (err) => {
-      console.error('Firestore purchase_orders snapshot error:', err);
-      if (onError) onError(err);
+      handleFirestoreError('purchase_orders snapshot', err, onError);
     }
   );
 }
@@ -191,7 +212,7 @@ export function subscribeToStoreSettings(
       }
     },
     (err) => {
-      console.error('Firestore store_config snapshot error:', err);
+      handleFirestoreError('store_config snapshot', err);
     }
   );
 }

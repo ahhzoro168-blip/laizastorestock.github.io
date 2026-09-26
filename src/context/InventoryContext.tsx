@@ -361,18 +361,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         // Filter out any explicitly deleted products from cloud response
         const validCloudProducts = cloudProducts.filter(p => !deletedIds.has(p.id));
-
         const cloudMap = new Map(validCloudProducts.map(p => [p.id, p]));
 
         // Find local items that are NOT in cloud yet AND NOT deleted
         const pendingLocalItems = localProducts.filter(p => !cloudMap.has(p.id) && !deletedIds.has(p.id));
-
-        if (pendingLocalItems.length > 0) {
-          // Re-sync missing local items to Firestore automatically so they never get lost
-          pendingLocalItems.forEach(item => {
-            saveProductToFirestore(item).catch(err => console.error('Failed re-syncing local product to Firestore:', err));
-          });
-        }
 
         // Merge cloud products with pending local items
         const mergedProducts = [
@@ -407,12 +399,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const cloudMap = new Map(cloudOrders.map(o => [o.id, o]));
         const pendingLocal = localOrders.filter(o => !cloudMap.has(o.id));
 
-        if (pendingLocal.length > 0) {
-          pendingLocal.forEach(o => {
-            saveOrderToFirestore(o).catch(e => console.error('Failed re-syncing order to Firestore:', e));
-          });
-        }
-
         const merged = [...cloudOrders, ...pendingLocal];
         if (merged.length > 0) {
           setOrders(merged);
@@ -437,12 +423,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const cloudMap = new Map(cloudPOs.map(po => [po.id, po]));
         const pendingLocal = localPOs.filter(po => !cloudMap.has(po.id));
 
-        if (pendingLocal.length > 0) {
-          pendingLocal.forEach(po => {
-            savePOToFirestore(po).catch(e => console.error('Failed re-syncing PO to Firestore:', e));
-          });
-        }
-
         const merged = [...cloudPOs, ...pendingLocal];
         if (merged.length > 0) {
           setPurchaseOrders(merged);
@@ -456,14 +436,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (config.customCategories && config.customCategories.length > 0) {
         setCustomCategories(config.customCategories);
         localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(config.customCategories));
-      } else {
-        saveStoreSettingsToFirestore({ customCategories: DEFAULT_CATEGORIES, customSkus: DEFAULT_SKUS });
       }
       if (config.customSkus && config.customSkus.length > 0) {
         setCustomSkus(config.customSkus);
         localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(config.customSkus));
-      } else {
-        saveStoreSettingsToFirestore({ customCategories: DEFAULT_CATEGORIES, customSkus: DEFAULT_SKUS });
       }
     });
 
