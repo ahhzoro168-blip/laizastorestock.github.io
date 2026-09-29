@@ -38,6 +38,12 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
   } = useInventory();
 
   const [activeTab, setActiveTab] = useState<'skus' | 'categories' | 'products'>('skus');
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  const showFeedback = (msg: string) => {
+    setSyncFeedback(msg);
+    setTimeout(() => setSyncFeedback(null), 3000);
+  };
 
   // New Category / SKU Input State
   const [newCategoryInput, setNewCategoryInput] = useState('');
@@ -69,16 +75,20 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
   const handleAddCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryInput.trim()) return;
-    addCategory(newCategoryInput.trim());
+    const catName = newCategoryInput.trim();
+    addCategory(catName);
     setNewCategoryInput('');
+    showFeedback(`Category "${catName}" added & synced across all devices!`);
   };
 
   // Handle Adding New SKU
   const handleAddSkuSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkuInput.trim()) return;
-    addModelSku(newSkuInput.trim().toUpperCase());
+    const skuCode = newSkuInput.trim().toUpperCase();
+    addModelSku(skuCode);
     setNewSkuInput('');
+    showFeedback(`SKU "${skuCode}" registered & synced across all devices!`);
   };
 
   // Save Category Edit
@@ -86,6 +96,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
     if (!editCategoryName.trim()) return;
     updateCategory(oldName, editCategoryName.trim());
     setEditingCategory(null);
+    showFeedback(`Category updated to "${editCategoryName.trim()}" & synced!`);
   };
 
   // Save SKU Edit
@@ -93,6 +104,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
     if (!editSkuCode.trim()) return;
     updateModelSku(oldSku, editSkuCode.trim().toUpperCase());
     setEditingSku(null);
+    showFeedback(`SKU updated to "${editSkuCode.trim().toUpperCase()}" & synced!`);
   };
 
   // Save Product Edit
@@ -137,6 +149,13 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
 
   return (
     <div className="space-y-6">
+      {syncFeedback && (
+        <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-semibold animate-in fade-in">
+          <Check className="w-4 h-4 shrink-0" />
+          <span>{syncFeedback}</span>
+        </div>
+      )}
+
       {/* Tabs Switcher */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <button

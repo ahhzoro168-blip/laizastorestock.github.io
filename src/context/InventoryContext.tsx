@@ -36,6 +36,7 @@ import {
   ALL_COLORS
 } from '../data/mockData';
 import DEFAULT_STORE_LOGO_IMG from '../assets/images/laiza_store_logo_1790350995561.jpg';
+import { pushDataToCloudflare } from '../services/cloudflareService';
 
 export interface LowStockAlertItem {
   productId: string;
@@ -263,6 +264,28 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return DEFAULT_STORE_LOGO;
   });
 
+  const broadcastCloudSync = (settings?: { customCategories?: string[]; customSkus?: string[]; storeName?: string; storeLogo?: string }) => {
+    const finalName = settings?.storeName ?? storeName;
+    const finalLogo = settings?.storeLogo ?? storeLogo;
+    const finalCategories = settings?.customCategories ?? customCategories;
+    const finalSkus = settings?.customSkus ?? customSkus;
+
+    pushDataToCloudflare(products, orders, purchaseOrders, {
+      storeName: finalName,
+      storeLogo: finalLogo,
+      customCategories: finalCategories,
+      customSkus: finalSkus
+    }).catch(console.error);
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('soletrack_device_sync');
+        channel.postMessage('sync_needed');
+        channel.close();
+      }
+    } catch (e) {}
+  };
+
   const updateStoreProfile = (profile: { storeName?: string; storeLogo?: string }) => {
     let newName = storeName;
     let newLogo = storeLogo;
@@ -282,6 +305,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       customCategories,
       customSkus
     }).catch(console.error);
+    broadcastCloudSync({ storeName: newName, storeLogo: newLogo });
   };
 
   // Derived merged lists (custom + current products)
@@ -303,6 +327,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const updated = [...prev, trimmed];
       localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
       saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
+      broadcastCloudSync({ customCategories: updated });
       return updated;
     });
   };
@@ -310,27 +335,42 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateCategory = (oldName: string, newName: string) => {
     const trimmedNew = newName.trim();
     if (!trimmedNew || oldName === trimmedNew) return;
-    setCustomCategories(prev => {
-      const updated = prev.map(c => c === oldName ? trimmedNew : c);
-      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
-      saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
-      return updated;
+    const updated = customCategories.map(c => c === oldName ? trimmedNew : c);
+    setCustomCategories(updated);
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+    saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
+
+    setProducts(prev => {
+      const updatedProds = prev.map(p => p.category === oldName ? { ...p, category: trimmedNew } : p);
+      pushDataToCloudflare(updatedProds, orders, purchaseOrders, {
+        storeName,
+        storeLogo,
+        customCategories: updated,
+        customSkus
+      }).catch(console.error);
+      return updatedProds;
     });
-    setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: trimmedNew } : p));
+    broadcastCloudSync({ customCategories: updated });
   };
 
   const deleteCategory = (categoryName: string) => {
-    setCustomCategories(prev => {
-      const updated = prev.filter(c => c !== categoryName);
-      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
-      saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
-      return updated;
-    });
+    const updated = customCategories.filter(c => c !== categoryName);
+    setCustomCategories(updated);
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(updated));
+    saveStoreSettingsToFirestore({ customCategories: updated, customSkus });
+    
     setProducts(prev => {
-      const remaining = customCategories.filter(c => c !== categoryName);
-      const fallback = remaining[0] || 'General';
-      return prev.map(p => p.category === categoryName ? { ...p, category: fallback } : p);
+      const fallback = updated[0] || 'General';
+      const updatedProds = prev.map(p => p.category === categoryName ? { ...p, category: fallback } : p);
+      pushDataToCloudflare(updatedProds, orders, purchaseOrders, {
+        storeName,
+        storeLogo,
+        customCategories: updated,
+        customSkus
+      }).catch(console.error);
+      return updatedProds;
     });
+    broadcastCloudSync({ customCategories: updated });
   };
 
   const addModelSku = (skuCode: string) => {
@@ -341,6 +381,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const updated = [...prev, trimmed];
       localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
       saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
+      broadcastCloudSync({ customSkus: updated });
       return updated;
     });
   };
@@ -348,23 +389,41 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateModelSku = (oldSku: string, newSku: string) => {
     const trimmedNew = newSku.trim().toUpperCase();
     if (!trimmedNew || oldSku === trimmedNew) return;
-    setCustomSkus(prev => {
-      const updated = prev.map(s => s === oldSku ? trimmedNew : s);
-      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
-      saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
-      return updated;
+    const updated = customSkus.map(s => s === oldSku ? trimmedNew : s);
+    setCustomSkus(updated);
+    localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+    saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
+
+    setProducts(prev => {
+      const updatedProds = prev.map(p => p.sku === oldSku ? { ...p, sku: trimmedNew } : p);
+      pushDataToCloudflare(updatedProds, orders, purchaseOrders, {
+        storeName,
+        storeLogo,
+        customCategories,
+        customSkus: updated
+      }).catch(console.error);
+      return updatedProds;
     });
-    setProducts(prev => prev.map(p => p.sku === oldSku ? { ...p, sku: trimmedNew } : p));
+    broadcastCloudSync({ customSkus: updated });
   };
 
   const deleteModelSku = (skuCode: string) => {
-    setCustomSkus(prev => {
-      const updated = prev.filter(s => s !== skuCode);
-      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
-      saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
-      return updated;
+    const updated = customSkus.filter(s => s !== skuCode);
+    setCustomSkus(updated);
+    localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(updated));
+    saveStoreSettingsToFirestore({ customCategories, customSkus: updated });
+    
+    setProducts(prev => {
+      const updatedProds = prev.map(p => p.sku === skuCode ? { ...p, sku: '' } : p);
+      pushDataToCloudflare(updatedProds, orders, purchaseOrders, {
+        storeName,
+        storeLogo,
+        customCategories,
+        customSkus: updated
+      }).catch(console.error);
+      return updatedProds;
     });
-    setProducts(prev => prev.map(p => p.sku === skuCode ? { ...p, sku: '' } : p));
+    broadcastCloudSync({ customSkus: updated });
   };
 
   const clearOldDefaults = () => {
@@ -1190,11 +1249,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setStoreLogoState(data.storeSettings.storeLogo);
         localStorage.setItem(STORAGE_KEY_STORE_LOGO, data.storeSettings.storeLogo);
       }
-      if (Array.isArray(data.storeSettings.customCategories) && data.storeSettings.customCategories.length > 0) {
+      if (Array.isArray(data.storeSettings.customCategories)) {
         setCustomCategories(data.storeSettings.customCategories);
         localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(data.storeSettings.customCategories));
       }
-      if (Array.isArray(data.storeSettings.customSkus) && data.storeSettings.customSkus.length > 0) {
+      if (Array.isArray(data.storeSettings.customSkus)) {
         setCustomSkus(data.storeSettings.customSkus);
         localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(data.storeSettings.customSkus));
       }
