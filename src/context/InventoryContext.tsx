@@ -108,6 +108,9 @@ interface InventoryContextType {
   restoreAllData: (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => void;
   syncAllLocalToCloud: () => Promise<void>;
   isCloudConnected: boolean;
+  storeName: string;
+  storeLogo: string;
+  updateStoreProfile: (profile: { storeName?: string; storeLogo?: string }) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -119,6 +122,10 @@ const STORAGE_KEY_CART = 'soletrack_cart_v2';
 const STORAGE_KEY_CATEGORIES = 'soletrack_categories_v2';
 const STORAGE_KEY_SKUS = 'soletrack_skus_v2';
 const STORAGE_KEY_DELETED_PRODUCT_IDS = 'soletrack_deleted_product_ids_v2';
+const STORAGE_KEY_STORE_NAME = 'soletrack_store_name_v2';
+const STORAGE_KEY_STORE_LOGO = 'soletrack_store_logo_v2';
+export const DEFAULT_STORE_NAME = 'Laiza Store';
+export const DEFAULT_STORE_LOGO = '/src/assets/images/laiza_store_logo_1790350995561.jpg';
 
 const getDeletedProductIds = (): Set<string> => {
   if (typeof window === 'undefined') return new Set();
@@ -238,6 +245,43 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     return [];
   });
+
+  const [storeName, setStoreNameState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY_STORE_NAME);
+      if (saved) return saved;
+    }
+    return DEFAULT_STORE_NAME;
+  });
+
+  const [storeLogo, setStoreLogoState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY_STORE_LOGO);
+      if (saved) return saved;
+    }
+    return DEFAULT_STORE_LOGO;
+  });
+
+  const updateStoreProfile = (profile: { storeName?: string; storeLogo?: string }) => {
+    let newName = storeName;
+    let newLogo = storeLogo;
+    if (profile.storeName !== undefined) {
+      newName = profile.storeName.trim() || DEFAULT_STORE_NAME;
+      setStoreNameState(newName);
+      localStorage.setItem(STORAGE_KEY_STORE_NAME, newName);
+    }
+    if (profile.storeLogo !== undefined) {
+      newLogo = profile.storeLogo;
+      setStoreLogoState(newLogo);
+      localStorage.setItem(STORAGE_KEY_STORE_LOGO, newLogo);
+    }
+    saveStoreSettingsToFirestore({
+      storeName: newName,
+      storeLogo: newLogo,
+      customCategories,
+      customSkus
+    }).catch(console.error);
+  };
 
   // Derived merged lists (custom + current products)
   const categories = Array.from(new Set([
@@ -438,6 +482,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     const unsubStoreSettings = subscribeToStoreSettings((config) => {
+      if (config.storeName) {
+        setStoreNameState(config.storeName);
+        localStorage.setItem(STORAGE_KEY_STORE_NAME, config.storeName);
+      }
+      if (config.storeLogo) {
+        setStoreLogoState(config.storeLogo);
+        localStorage.setItem(STORAGE_KEY_STORE_LOGO, config.storeLogo);
+      }
       if (Array.isArray(config.customCategories)) {
         setCustomCategories(config.customCategories);
         localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(config.customCategories));
@@ -1178,7 +1230,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         clearAllData,
         restoreAllData,
         syncAllLocalToCloud,
-        isCloudConnected
+        isCloudConnected,
+        storeName,
+        storeLogo,
+        updateStoreProfile
       }}
     >
       {children}

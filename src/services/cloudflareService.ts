@@ -43,10 +43,27 @@ export async function fetchCloudflareStatus(config?: CloudflareConfig) {
   try {
     const res = await fetch('/api/cloudflare/status', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config || getLocalCloudflareConfig())
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (res.status === 405) {
+      return {
+        d1Connected: false,
+        r2Connected: false,
+        message: 'HTTP 405 Method Not Allowed: The hosting environment or preview iframe intercepted the POST request. Your credentials are saved locally in browser storage.'
+      };
+    }
+    if (res.status === 404) {
+      return {
+        d1Connected: false,
+        r2Connected: false,
+        message: 'HTTP 404 Not Found: The backend proxy route was not reachable. Your credentials are saved locally in browser storage.'
+      };
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText || 'Connection failed'}`);
+    }
     return await res.json();
   } catch (err: any) {
     return {
@@ -61,9 +78,13 @@ export async function initCloudflareD1Schema(config?: CloudflareConfig) {
   try {
     const res = await fetch('/api/cloudflare/init-schema', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config || getLocalCloudflareConfig())
     });
+    if (res.status === 405) {
+      return { success: false, message: 'HTTP 405: POST method not allowed by preview proxy for schema initialization.' };
+    }
     return await res.json();
   } catch (err: any) {
     return { success: false, message: err.message || 'Schema initialization failed' };
@@ -79,6 +100,7 @@ export async function pushDataToCloudflare(
   try {
     const res = await fetch('/api/cloudflare/sync/push', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         config: config || getLocalCloudflareConfig(),
@@ -87,6 +109,9 @@ export async function pushDataToCloudflare(
         purchaseOrders
       })
     });
+    if (res.status === 405) {
+      return { success: false, message: 'HTTP 405: POST method not allowed by preview proxy for push sync.' };
+    }
     return await res.json();
   } catch (err: any) {
     return { success: false, message: err.message || 'Cloudflare Push failed' };
@@ -97,6 +122,7 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig) {
   try {
     const res = await fetch('/api/cloudflare/sync/pull', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         config: config || getLocalCloudflareConfig()
@@ -126,6 +152,7 @@ export async function uploadImageToCloudflareR2(
   try {
     const res = await fetch('/api/cloudflare/upload-image', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         config: config || getLocalCloudflareConfig(),

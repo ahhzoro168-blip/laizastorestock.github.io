@@ -194,12 +194,16 @@ export async function savePOToFirestore(po: PurchaseOrder): Promise<void> {
 }
 
 export interface StoreConfig {
+  storeName?: string;
+  storeLogo?: string;
+  storePhone?: string;
+  currency?: string;
   customCategories?: string[];
   customSkus?: string[];
 }
 
 /**
- * Real-time listener for Store Configuration (SKUs, Categories)
+ * Real-time listener for Store Configuration (SKUs, Categories, Profile)
  */
 export function subscribeToStoreSettings(
   onUpdate: (config: StoreConfig) => void
@@ -224,7 +228,7 @@ export function subscribeToStoreSettings(
 export async function saveStoreSettingsToFirestore(config: StoreConfig): Promise<void> {
   const docRef = doc(db, 'settings', 'store_config');
   const cleanData = sanitizeForFirestore(config);
-  await setDoc(docRef, cleanData);
+  await setDoc(docRef, cleanData, { merge: true });
 }
 
 /**

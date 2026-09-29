@@ -76,7 +76,7 @@ const MainApp: React.FC = () => {
       isLight ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
     }`}>
       
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar & Mobile/Tablet Down Bar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -90,8 +90,8 @@ const MainApp: React.FC = () => {
         }}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 pt-18 sm:pt-20 pb-4 sm:pb-8 min-w-0">
+      {/* Main Content Area (pb-20 sm:pb-24 provides clearance above the tablet/mobile down bar) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 pt-18 sm:pt-20 pb-20 sm:pb-24 lg:pb-8 min-w-0">
         {activeTab === 'inventory' && (
           <InventoryView
             onOpenProductDetail={handleOpenProductDetail}
@@ -115,7 +115,11 @@ const MainApp: React.FC = () => {
         )}
 
         {activeTab === 'seasonal' && (
-          <SeasonalInsightsDashboard />
+          <SettingsView 
+            defaultSection="seasonal" 
+            onOpenAddModal={() => setIsAddModalOpen(true)} 
+            onBackToSettings={() => setActiveTab('settings')}
+          />
         )}
 
         {activeTab === 'settings' && (

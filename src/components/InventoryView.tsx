@@ -651,6 +651,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'all' | ShoeGender>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -749,58 +750,140 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             </span>
           </div>
 
-          {/* Right Controls: Add New, Grid/List view toggle, Search Box, Filters */}
-          <div className="flex items-center flex-wrap sm:flex-nowrap gap-2.5 w-full lg:w-auto justify-between sm:justify-end">
+          {/* Right Controls: Add New on the left, and Filter + Search + View toggle grouped cleanly on the right */}
+          <div className="flex items-center justify-between gap-2 sm:gap-2.5 w-full lg:w-auto min-w-0">
             {/* Add New Product Button */}
             <button
               type="button"
               onClick={onOpenAddModal}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-pink-500 hover:bg-pink-400 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-pink-500/20 active:scale-95 shrink-0 cursor-pointer"
+              className="h-9 flex items-center justify-center gap-1.5 px-3.5 bg-pink-500 hover:bg-pink-400 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-pink-500/20 active:scale-95 shrink-0 cursor-pointer"
               title="Register new footwear product"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
               <span>Add New</span>
             </button>
 
-            {/* 2 View Options Toggle (Grid & List) */}
-            <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 gap-1 shrink-0 shadow-sm">
+            {/* Search, Filter, and Grid/List Controls Group */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
+              {/* Search Function: Mobile version shows only icon; Desktop & Tablet shows full input */}
+              {/* Mobile Search Icon Button */}
               <button
                 type="button"
-                onClick={() => setDisplayMode('grid')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  displayMode === 'grid'
-                    ? 'bg-pink-500 text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                onClick={() => setIsMobileSearchOpen(prev => !prev)}
+                className={`sm:hidden h-9 w-9 flex items-center justify-center rounded-xl border transition-all cursor-pointer relative shrink-0 ${
+                  isMobileSearchOpen || searchQuery
+                    ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-300 dark:border-pink-500/40 shadow-xs'
+                    : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 shadow-sm'
                 }`}
-                title="Grid View"
-                aria-label="Grid View"
+                title={isMobileSearchOpen ? 'Close search' : 'Search shoe model, SKU...'}
+                aria-label="Search"
               >
-                <LayoutGrid className="w-4 h-4" />
+                <Search className="w-4 h-4" />
+                {searchQuery && !isMobileSearchOpen && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-pink-500 rounded-full ring-2 ring-white dark:ring-slate-950" />
+                )}
               </button>
-              <button
-                type="button"
-                onClick={() => setDisplayMode('list')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  displayMode === 'list'
-                    ? 'bg-pink-500 text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                }`}
-                title="List View"
-                aria-label="List View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
 
-            {/* Search Input Box - positioned to the right of list view */}
-            <div className="relative flex-1 sm:w-56 md:w-64 lg:w-72 shrink-0">
+              {/* Desktop & Tablet Search Input Box */}
+              <div className="hidden sm:block relative sm:w-40 md:w-52 lg:w-64 xl:w-72 shrink-0 min-w-0">
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search shoe model, SKU..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8.5 pr-7 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Toggle Filter Button with Down Arrow (Positioned to the right of Search) */}
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`h-9 px-2.5 sm:px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shrink-0 border cursor-pointer ${
+                  showFilters || activeDropdownFiltersCount > 0
+                    ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-500/30 shadow-sm'
+                    : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 shadow-sm'
+                }`}
+                title={showFilters ? 'Hide filters' : 'Show filters'}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeDropdownFiltersCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-pink-500 text-white font-black text-[10px] flex items-center justify-center">
+                    {activeDropdownFiltersCount}
+                  </span>
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showFilters ? 'rotate-180 text-pink-500 dark:text-pink-400' : 'text-slate-400'}`} />
+              </button>
+
+              {/* Clear Filters Button (Visible when filters applied) */}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="h-9 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors shrink-0 cursor-pointer"
+                  title="Reset all filters"
+                >
+                  <span>Reset</span>
+                </button>
+              )}
+
+              {/* 2 View Options Toggle (Grid & List) */}
+              <div className="h-9 flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 gap-0.5 shrink-0 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('grid')}
+                  className={`h-7.5 w-7.5 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
+                    displayMode === 'grid'
+                      ? 'bg-pink-500 text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  }`}
+                  title="Grid View"
+                  aria-label="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('list')}
+                  className={`h-7.5 w-7.5 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
+                    displayMode === 'list'
+                      ? 'bg-pink-500 text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  }`}
+                  title="List View"
+                  aria-label="List View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Search Input Drawer (Visible on Mobile when Search icon is tapped) */}
+        {isMobileSearchOpen && (
+          <div className="sm:hidden flex items-center gap-2 pt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="relative flex-1">
               <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
+                autoFocus
                 type="text"
                 placeholder="Search shoe model, SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8.5 pr-7 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors shadow-sm"
+                className="w-full bg-white dark:bg-slate-900 border border-pink-400 dark:border-pink-500/50 rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-colors shadow-sm"
               />
               {searchQuery && (
                 <button
@@ -813,41 +896,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 </button>
               )}
             </div>
-
-            {/* Toggle Filter Button with Down Arrow */}
             <button
               type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shrink-0 border cursor-pointer ${
-                showFilters || activeDropdownFiltersCount > 0
-                  ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-500/30 shadow-sm'
-                  : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 shadow-sm'
-              }`}
-              title={showFilters ? 'Hide filters' : 'Show filters'}
+              onClick={() => setIsMobileSearchOpen(false)}
+              className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl shrink-0 cursor-pointer transition-colors"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline sm:inline">Filters</span>
-              {activeDropdownFiltersCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-pink-500 text-white font-black text-[10px] flex items-center justify-center">
-                  {activeDropdownFiltersCount}
-                </span>
-              )}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showFilters ? 'rotate-180 text-pink-500 dark:text-pink-400' : 'text-slate-400'}`} />
+              Done
             </button>
-
-            {/* Clear Filters Button (Visible when filters applied) */}
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors shrink-0 cursor-pointer"
-                title="Reset all filters"
-              >
-                <span>Reset</span>
-              </button>
-            )}
           </div>
-        </div>
+        )}
 
         {/* Dropdown Select Boxes (Gender, Category, Color, Size) when expanded */}
         {showFilters && (
@@ -1081,37 +1138,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             ))
           )}
         </div>
-      )}
-
-      {/* Floating Bottom Cart Bar when items are in cart */}
-      {totalCartItems > 0 && (
-        <aside 
-          aria-label="Active Cart Summary"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 bg-white/95 dark:bg-slate-900/95 border border-pink-400 dark:border-pink-500/50 backdrop-blur-md rounded-2xl shadow-xl dark:shadow-2xl p-3 sm:px-5 sm:py-3.5 flex items-center gap-3.5 sm:gap-5 text-xs max-w-lg w-[92%] sm:w-auto animate-in slide-in-from-bottom-4"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-pink-500 text-white flex items-center justify-center font-bold shadow-md shadow-pink-500/20 shrink-0">
-              <ShoppingCart className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">
-                {totalCartItems} {totalCartItems === 1 ? 'Pair' : 'Pairs'} in Cart
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                Total: <strong className="text-pink-600 dark:text-pink-400 font-bold">{formatRiel(totalCartAmount)}</strong> ({cart.length} model{cart.length > 1 ? 's' : ''})
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleOpenCartModal()}
-            className="ml-auto bg-pink-500 hover:bg-pink-400 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-pink-500/20 active:scale-95 shrink-0 cursor-pointer"
-          >
-            <span>Review & Sell</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </aside>
       )}
     </div>
   );

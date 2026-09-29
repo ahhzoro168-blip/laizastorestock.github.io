@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { X, Printer, Truck, CheckCircle, QrCode, MapPin, Phone, User, Calendar } from 'lucide-react';
 import { SaleOrder } from '../types';
+import { useInventory } from '../context/InventoryContext';
 
 interface ReceiptModalProps {
   order: SaleOrder | null;
@@ -15,6 +16,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onClose,
   onNavigateToTracking
 }) => {
+  const { storeName, storeLogo } = useInventory();
   const receiptRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !order) return null;
@@ -54,7 +56,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           >
             {/* Header Brand */}
             <div className="text-center border-b border-dashed border-slate-300 pb-4 mb-4">
-              <h2 className="text-lg font-black tracking-tight font-['Plus_Jakarta_Sans']">LAIZA STORE FOOTWEAR</h2>
+              <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-300 mx-auto mb-2 flex items-center justify-center bg-slate-50">
+                <img src={storeLogo} alt={storeName} className="w-full h-full object-cover" />
+              </div>
+              <h2 className="text-lg font-black tracking-tight font-['Plus_Jakarta_Sans'] uppercase">{storeName} FOOTWEAR</h2>
               <p className="text-[11px] text-slate-600">Phnom Penh Flagship & Province Dispatch Hub</p>
               <p className="text-[10px] text-slate-500 font-mono mt-0.5">Tel: +855 (0) 12 884 921 · VAT Registered</p>
               
@@ -177,7 +182,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </div>
 
             <p className="text-[10px] text-center text-slate-500 mt-4 leading-normal">
-              Thank you for choosing Laiza Store! Free size exchange within 7 days in original condition.
+              Thank you for choosing {storeName}! Free size exchange within 7 days in original condition.
             </p>
           </div>
 
