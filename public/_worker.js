@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Worker (Advanced Mode)
- * - Intercepts all requests starting with /api/cloudflare/ and proxies them to https://api.cloudflare.com/client/v4/
- * - Handles internal synchronization endpoints (/status, /init-schema, /sync/push, /sync/pull, /upload-image, /config)
+ * - Intercepts all requests starting with /api/cloudflare/
+ * - Handles internal synchronization endpoints (/status, /sync/push, /sync/pull)
  * - Cleanly handles CORS & OPTIONS preflight requests
  * - Serves static assets for non-API routes using env.ASSETS.fetch(request)
  */
@@ -177,13 +177,12 @@ export default {
 
       // --- Route 2: Sync Pull ---
       if (path.endsWith('/sync/pull')) {
-        // Execute your D1 pull logic / query here
         try {
-          // Example D1 retrieval or mock payload:
           const pullRes = await executeSql(env, 'SELECT * FROM inventory;', [], {});
+          const rawResults = pullRes?.result?.[0]?.results || pullRes?.result || [];
           return jsonResponse({
             success: true,
-            data: pullRes?.results || [],
+            data: rawResults,
           });
         } catch (err) {
           return jsonResponse({ success: false, error: err.message }, 500);
@@ -194,15 +193,15 @@ export default {
       if (path.endsWith('/sync/push')) {
         try {
           const body = await request.json();
-          // Execute your D1 insert/update logic here
           return jsonResponse({ success: true, message: 'Sync pushed successfully' });
         } catch (err) {
           return jsonResponse({ success: false, error: err.message }, 500);
         }
       }
 
-      // Fallback for unmatched /api/cloudflare/* routes
-      return jsonResponse({ error: 'Endpoint not found' }, 404);
+      // Fallback: Proxy remaining /api/cloudflare/* requests to Cloudflare API
+      const subPath = path.replace(/^\/api\/cloudflare\//, '');
+      return await proxyToCloudflareApi(request, env, subPath);
     }
 
     // 2. Serve static site assets for all other non-API routes
