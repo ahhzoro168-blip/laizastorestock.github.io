@@ -371,27 +371,41 @@ export const CloudflareSettingsSection: React.FC = () => {
           {/* R2 Bucket Name */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
-              <span>Cloudflare R2 Bucket Name (Optional)</span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Object storage for high-res photos</span>
+              <span>Cloudflare R2 Bucket Name</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Bucket for shop logo and shoes photos</span>
             </label>
             <input
               type="text"
-              placeholder="e.g. laiza-store-shoe-images"
+              placeholder="e.g. laiza-store-images"
               value={r2BucketName}
               onChange={e => setR2BucketName(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-pink-500 font-mono text-xs"
             />
           </div>
 
+          {/* S3 API Endpoint Info (Read-only helper) */}
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <span className="flex items-center gap-1.5 text-sky-500">
+                <HardDrive className="w-3.5 h-3.5" />
+                <span>R2 S3 API Endpoint</span>
+              </span>
+              <span className="text-[10px] text-emerald-500">Public Access Enabled</span>
+            </div>
+            <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 break-all select-all">
+              {`https://${accountId || '62b64801700fa9050dbc39cdc9174d38'}.r2.cloudflarestorage.com/${r2BucketName || 'laiza-store-images'}`}
+            </p>
+          </div>
+
           {/* R2 Public Domain */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
-              <span>R2 Public Domain / CDN URL (Optional)</span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">e.g. https://pub-xxx.r2.dev</span>
+              <span>R2 Public Domain / R2.dev URL</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Found in R2 Bucket -&gt; Settings -&gt; Public Development URL</span>
             </label>
             <input
               type="text"
-              placeholder="e.g. https://pub-xxx.r2.dev"
+              placeholder="e.g. https://pub-2a808954f1c74db3a94cdce96474d81f.r2.dev"
               value={r2PublicDomain}
               onChange={e => setR2PublicDomain(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-pink-500 font-mono text-xs"

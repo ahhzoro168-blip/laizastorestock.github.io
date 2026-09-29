@@ -305,12 +305,16 @@ async function startServer() {
         if (r2Upload.ok) {
           const publicUrl = effR2PublicDomain 
             ? `${effR2PublicDomain.replace(/\/$/, '')}/${cleanName}`
-            : `https://pub-r2.cloudflare.com/${effR2BucketName}/${cleanName}`;
+            : `https://pub-2a808954f1c74db3a94cdce96474d81f.r2.dev/${cleanName}`;
 
+          console.log(`✅ Uploaded image to Cloudflare R2: ${publicUrl}`);
           return res.json({ success: true, url: publicUrl });
+        } else {
+          const errBody = await r2Upload.text();
+          console.warn(`⚠️ Cloudflare R2 Upload returned HTTP ${r2Upload.status}:`, errBody);
         }
       } catch (e) {
-        console.error('Cloudflare R2 Upload failed:', e);
+        console.error('Cloudflare R2 Upload failed with exception:', e);
       }
     }
 
