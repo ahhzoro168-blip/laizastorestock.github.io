@@ -133,13 +133,33 @@ async function startServer() {
     });
   });
 
+  app.get('/api/cloudflare/config', (req, res) => {
+    return res.json({
+      success: true,
+      config: {
+        accountId: memoryStore.config.accountId,
+        d1DatabaseId: memoryStore.config.d1DatabaseId,
+        r2BucketName: memoryStore.config.r2BucketName,
+        r2PublicDomain: memoryStore.config.r2PublicDomain,
+        hasApiToken: Boolean(memoryStore.config.apiToken)
+      }
+    });
+  });
+
   app.post('/api/cloudflare/sync/push', async (req, res) => {
     const { config, products = [], orders = [], purchaseOrders = [], storeSettings } = req.body || {};
+    
+    if (config?.apiToken) memoryStore.config.apiToken = config.apiToken;
+    if (config?.accountId) memoryStore.config.accountId = config.accountId;
+    if (config?.d1DatabaseId) memoryStore.config.d1DatabaseId = config.d1DatabaseId;
+    if (config?.r2BucketName) memoryStore.config.r2BucketName = config.r2BucketName;
+    if (config?.r2PublicDomain) memoryStore.config.r2PublicDomain = config.r2PublicDomain;
+
     const effAccountId = config?.accountId || memoryStore.config.accountId;
     const effApiToken = config?.apiToken || memoryStore.config.apiToken;
     const effD1Id = config?.d1DatabaseId || memoryStore.config.d1DatabaseId;
 
-    // Always update local memory store as fallback
+    // Always update local memory store as persistent fallback
     memoryStore.products = products;
     memoryStore.orders = orders;
     memoryStore.purchaseOrders = purchaseOrders;
@@ -233,36 +253,53 @@ async function startServer() {
       const poRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM purchase_orders;');
       const sRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM store_settings WHERE id = "main_settings";');
 
+      let cloudProducts: any[] = [];
       if (pRes?.success && pRes.result?.[0]?.results) {
-        const cloudProducts = pRes.result[0].results.map((r: any) => {
+        cloudProducts = pRes.result[0].results.map((r: any) => {
           try { return JSON.parse(r.payload); } catch (e) { return null; }
         }).filter(Boolean);
-
-        const cloudOrders = (oRes?.result?.[0]?.results || []).map((r: any) => {
-          try { return JSON.parse(r.payload); } catch (e) { return null; }
-        }).filter(Boolean);
-
-        const cloudPOs = (poRes?.result?.[0]?.results || []).map((r: any) => {
-          try { return JSON.parse(r.payload); } catch (e) { return null; }
-        }).filter(Boolean);
-
-        let cloudSettings = undefined;
-        if (sRes?.result?.[0]?.results?.[0]?.payload) {
-          try {
-            cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
-          } catch (e) {}
-        }
-
-        return res.json({
-          success: true,
-          data: {
-            products: cloudProducts,
-            orders: cloudOrders,
-            purchaseOrders: cloudPOs,
-            storeSettings: cloudSettings
-          }
-        });
       }
+      if (cloudProducts.length === 0 && memoryStore.products.length > 0) {
+        cloudProducts = memoryStore.products;
+      }
+
+      let cloudOrders: any[] = [];
+      if (oRes?.success && oRes.result?.[0]?.results) {
+        cloudOrders = oRes.result[0].results.map((r: any) => {
+          try { return JSON.parse(r.payload); } catch (e) { return null; }
+        }).filter(Boolean);
+      }
+      if (cloudOrders.length === 0 && memoryStore.orders.length > 0) {
+        cloudOrders = memoryStore.orders;
+      }
+
+      let cloudPOs: any[] = [];
+      if (poRes?.success && poRes.result?.[0]?.results) {
+        cloudPOs = poRes.result[0].results.map((r: any) => {
+          try { return JSON.parse(r.payload); } catch (e) { return null; }
+        }).filter(Boolean);
+      }
+      if (cloudPOs.length === 0 && memoryStore.purchaseOrders.length > 0) {
+        cloudPOs = memoryStore.purchaseOrders;
+      }
+
+      let cloudSettings = undefined;
+      if (sRes?.result?.[0]?.results?.[0]?.payload) {
+        try {
+          cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
+        } catch (e) {}
+      }
+      const finalSettings = cloudSettings || memoryStore.storeSettings;
+
+      return res.json({
+        success: true,
+        data: {
+          products: cloudProducts,
+          orders: cloudOrders,
+          purchaseOrders: cloudPOs,
+          storeSettings: finalSettings
+        }
+      });
     }
 
     // Fallback to memory store
