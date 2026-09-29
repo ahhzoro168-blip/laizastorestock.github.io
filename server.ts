@@ -29,11 +29,11 @@ async function startServer() {
     orders: [] as any[],
     purchaseOrders: [] as any[],
     config: {
-      accountId: '',
-      apiToken: '',
-      d1DatabaseId: '',
-      r2BucketName: '',
-      r2PublicDomain: '',
+      accountId: process.env.CLOUDFLARE_ACCOUNT_ID || '62b64801700fa9050dbc39cdc9174d38',
+      apiToken: process.env.CLOUDFLARE_API_TOKEN || '',
+      d1DatabaseId: process.env.CLOUDFLARE_D1_DATABASE_ID || 'eadf684e-05e7-4242-8855-a5ad5b0a69dd',
+      r2BucketName: process.env.CLOUDFLARE_R2_BUCKET_NAME || 'laiza-store-images',
+      r2PublicDomain: process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || 'https://pub-2a808954f1c74db3a94cdce96474d81f.r2.dev',
       autoSyncEnabled: true
     }
   };
@@ -66,22 +66,27 @@ async function startServer() {
     const body = req.method === 'GET' ? req.query : req.body;
     const { accountId, apiToken, d1DatabaseId, r2BucketName } = (body as any) || {};
 
-    if (!accountId || !apiToken || !d1DatabaseId) {
+    const effAccountId = accountId || memoryStore.config.accountId;
+    const effApiToken = apiToken || memoryStore.config.apiToken;
+    const effD1Id = d1DatabaseId || memoryStore.config.d1DatabaseId;
+    const effR2Bucket = r2BucketName || memoryStore.config.r2BucketName;
+
+    if (!effAccountId || !effApiToken || !effD1Id) {
       return res.json({
         d1Connected: false,
         r2Connected: false,
-        message: 'Cloudflare credentials not provided. Operating in Local Proxy mode.'
+        message: 'Cloudflare credentials not provided.'
       });
     }
 
-    const d1Result = await queryD1(accountId, apiToken, d1DatabaseId, 'SELECT 1 as test;');
+    const d1Result = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT 1 as test;');
     const d1Connected = Boolean(d1Result && d1Result.success);
 
     let r2Connected = false;
-    if (r2BucketName && accountId && apiToken) {
+    if (effR2Bucket && effAccountId && effApiToken) {
       try {
-        const r2Res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${r2BucketName}`, {
-          headers: { 'Authorization': `Bearer ${apiToken}` }
+        const r2Res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${effAccountId}/r2/buckets/${effR2Bucket}`, {
+          headers: { 'Authorization': `Bearer ${effApiToken}` }
         });
         const r2Json = await r2Res.json();
         r2Connected = Boolean(r2Json.success);
@@ -93,14 +98,17 @@ async function startServer() {
     return res.json({
       d1Connected,
       r2Connected,
-      message: d1Connected ? 'Successfully connected to Cloudflare D1!' : 'Could not authenticate with Cloudflare D1.'
+      message: d1Connected ? 'Successfully connected to Cloudflare D1 Database & R2 Storage!' : 'Could not authenticate with Cloudflare D1.'
     });
   });
 
   app.post('/api/cloudflare/init-schema', async (req, res) => {
     const { accountId, apiToken, d1DatabaseId } = req.body || {};
+    const effAccountId = accountId || memoryStore.config.accountId;
+    const effApiToken = apiToken || memoryStore.config.apiToken;
+    const effD1Id = d1DatabaseId || memoryStore.config.d1DatabaseId;
 
-    if (!accountId || !apiToken || !d1DatabaseId) {
+    if (!effAccountId || !effApiToken || !effD1Id) {
       return res.json({
         success: true,
         message: 'Schema initialized in local memory store.'
@@ -111,9 +119,9 @@ async function startServer() {
     const sqlOrders = `CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, orderNumber TEXT, totalAmount REAL, payload TEXT, createdAt TEXT);`;
     const sqlPOs = `CREATE TABLE IF NOT EXISTS purchase_orders (id TEXT PRIMARY KEY, poNumber TEXT, status TEXT, payload TEXT, createdAt TEXT);`;
 
-    const r1 = await queryD1(accountId, apiToken, d1DatabaseId, sqlProducts);
-    const r2 = await queryD1(accountId, apiToken, d1DatabaseId, sqlOrders);
-    const r3 = await queryD1(accountId, apiToken, d1DatabaseId, sqlPOs);
+    const r1 = await queryD1(effAccountId, effApiToken, effD1Id, sqlProducts);
+    const r2 = await queryD1(effAccountId, effApiToken, effD1Id, sqlOrders);
+    const r3 = await queryD1(effAccountId, effApiToken, effD1Id, sqlPOs);
 
     const success = Boolean(r1?.success && r2?.success && r3?.success);
     return res.json({
@@ -124,21 +132,23 @@ async function startServer() {
 
   app.post('/api/cloudflare/sync/push', async (req, res) => {
     const { config, products = [], orders = [], purchaseOrders = [] } = req.body || {};
-    const { accountId, apiToken, d1DatabaseId } = config || {};
+    const effAccountId = config?.accountId || memoryStore.config.accountId;
+    const effApiToken = config?.apiToken || memoryStore.config.apiToken;
+    const effD1Id = config?.d1DatabaseId || memoryStore.config.d1DatabaseId;
 
     // Always update local memory store as fallback
     memoryStore.products = products;
     memoryStore.orders = orders;
     memoryStore.purchaseOrders = purchaseOrders;
 
-    if (accountId && apiToken && d1DatabaseId) {
+    if (effAccountId && effApiToken && effD1Id) {
       // Upsert products to D1
       for (const p of products) {
         const payload = JSON.stringify(p);
         await queryD1(
-          accountId,
-          apiToken,
-          d1DatabaseId,
+          effAccountId,
+          effApiToken,
+          effD1Id,
           `INSERT INTO products (id, name, sku, gender, category, costPrice, retailPrice, totalStock, payload, createdAt) 
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET 
@@ -153,12 +163,12 @@ async function startServer() {
       for (const o of orders) {
         const payload = JSON.stringify(o);
         await queryD1(
-          accountId,
-          apiToken,
-          d1DatabaseId,
-          `INSERT INTO orders (id, orderNumber, totalAmount, payload, createdAt)
+          effAccountId,
+          effApiToken,
+          effD1Id,
+          `INSERT INTO orders (id, orderNumber, totalAmount, payload, createdAt) 
            VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET
+           ON CONFLICT(id) DO UPDATE SET 
              orderNumber=excluded.orderNumber, totalAmount=excluded.totalAmount, payload=excluded.payload, createdAt=excluded.createdAt;`,
           [o.id, o.orderNumber, o.totalAmount, payload, o.createdAt || new Date().toISOString()]
         );
@@ -168,32 +178,39 @@ async function startServer() {
       for (const po of purchaseOrders) {
         const payload = JSON.stringify(po);
         await queryD1(
-          accountId,
-          apiToken,
-          d1DatabaseId,
-          `INSERT INTO purchase_orders (id, poNumber, status, payload, createdAt)
+          effAccountId,
+          effApiToken,
+          effD1Id,
+          `INSERT INTO purchase_orders (id, poNumber, status, payload, createdAt) 
            VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET
+           ON CONFLICT(id) DO UPDATE SET 
              poNumber=excluded.poNumber, status=excluded.status, payload=excluded.payload, createdAt=excluded.createdAt;`,
           [po.id, po.poNumber, po.status, payload, po.createdAt || new Date().toISOString()]
         );
       }
+
+      return res.json({
+        success: true,
+        message: `Successfully synchronized ${products.length} footwear products to Cloudflare D1!`
+      });
     }
 
     return res.json({
       success: true,
-      message: `Pushed ${products.length} products to Cloudflare Storage.`
+      message: `Synchronized ${products.length} footwear products in memory.`
     });
   });
 
   app.post('/api/cloudflare/sync/pull', async (req, res) => {
     const { config } = req.body || {};
-    const { accountId, apiToken, d1DatabaseId } = config || {};
+    const effAccountId = config?.accountId || memoryStore.config.accountId;
+    const effApiToken = config?.apiToken || memoryStore.config.apiToken;
+    const effD1Id = config?.d1DatabaseId || memoryStore.config.d1DatabaseId;
 
-    if (accountId && apiToken && d1DatabaseId) {
-      const pRes = await queryD1(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM products;');
-      const oRes = await queryD1(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM orders;');
-      const poRes = await queryD1(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM purchase_orders;');
+    if (effAccountId && effApiToken && effD1Id) {
+      const pRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM products;');
+      const oRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM orders;');
+      const poRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM purchase_orders;');
 
       if (pRes?.success && pRes.result?.[0]?.results) {
         const cloudProducts = pRes.result[0].results.map((r: any) => {
@@ -232,12 +249,15 @@ async function startServer() {
 
   app.post('/api/cloudflare/upload-image', async (req, res) => {
     const { config, base64Data, filename } = req.body || {};
-    const { accountId, apiToken, r2BucketName, r2PublicDomain } = config || {};
+    const effAccountId = config?.accountId || memoryStore.config.accountId;
+    const effApiToken = config?.apiToken || memoryStore.config.apiToken;
+    const effR2BucketName = config?.r2BucketName || memoryStore.config.r2BucketName;
+    const effR2PublicDomain = config?.r2PublicDomain || memoryStore.config.r2PublicDomain;
 
-    if (accountId && apiToken && r2BucketName && base64Data) {
+    if (effAccountId && effApiToken && effR2BucketName && base64Data) {
       try {
         const cleanName = filename ? filename.replace(/[^a-zA-Z0-9.-]/g, '_') : `shoe_${Date.now()}.jpg`;
-        const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${r2BucketName}/objects/${cleanName}`;
+        const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${effAccountId}/r2/buckets/${effR2BucketName}/objects/${cleanName}`;
         
         // Strip base64 header if present
         const rawBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
@@ -246,16 +266,16 @@ async function startServer() {
         const r2Upload = await fetch(uploadUrl, {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${apiToken}`,
+            'Authorization': `Bearer ${effApiToken}`,
             'Content-Type': 'image/jpeg'
           },
           body: buffer
         });
 
         if (r2Upload.ok) {
-          const publicUrl = r2PublicDomain 
-            ? `${r2PublicDomain.replace(/\/$/, '')}/${cleanName}`
-            : `https://pub-r2.cloudflare.com/${r2BucketName}/${cleanName}`;
+          const publicUrl = effR2PublicDomain 
+            ? `${effR2PublicDomain.replace(/\/$/, '')}/${cleanName}`
+            : `https://pub-r2.cloudflare.com/${effR2BucketName}/${cleanName}`;
 
           return res.json({ success: true, url: publicUrl });
         }
