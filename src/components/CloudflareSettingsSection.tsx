@@ -259,9 +259,9 @@ export const CloudflareSettingsSection: React.FC = () => {
           {/* D1 Table Schema Initialization Card */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shadow-sm dark:shadow-md">
             <div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">1. Initialize D1 Database Schema</h4>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">1. Initialize D1 Database Tables</h4>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Automatically create SQL tables (`products`, `orders`, `purchase_orders`) on Cloudflare D1.
+                Creates dedicated SQL tables on Cloudflare D1: <code className="text-pink-500 font-mono">products</code>, <code className="text-pink-500 font-mono">orders</code>, <code className="text-pink-500 font-mono">purchase_orders</code>, <code className="text-pink-500 font-mono">store_settings</code>, <code className="text-pink-500 font-mono">model_skus</code>, and <code className="text-pink-500 font-mono">categories</code>.
               </p>
             </div>
             <button
@@ -271,7 +271,7 @@ export const CloudflareSettingsSection: React.FC = () => {
               className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shrink-0 disabled:opacity-50 border border-slate-200 dark:border-slate-700"
             >
               <Layers className="w-4 h-4 text-pink-500 dark:text-pink-400" />
-              <span>Init Tables</span>
+              <span>Init 6 Tables</span>
             </button>
           </div>
 

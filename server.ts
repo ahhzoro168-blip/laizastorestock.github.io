@@ -120,16 +120,20 @@ async function startServer() {
     const sqlOrders = `CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, orderNumber TEXT, totalAmount REAL, payload TEXT, createdAt TEXT);`;
     const sqlPOs = `CREATE TABLE IF NOT EXISTS purchase_orders (id TEXT PRIMARY KEY, poNumber TEXT, status TEXT, payload TEXT, createdAt TEXT);`;
     const sqlSettings = `CREATE TABLE IF NOT EXISTS store_settings (id TEXT PRIMARY KEY, payload TEXT, updatedAt TEXT);`;
+    const sqlSkus = `CREATE TABLE IF NOT EXISTS model_skus (sku TEXT PRIMARY KEY, name TEXT, description TEXT, createdAt TEXT);`;
+    const sqlCategories = `CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY, description TEXT, createdAt TEXT);`;
 
     const r1 = await queryD1(effAccountId, effApiToken, effD1Id, sqlProducts);
     const r2 = await queryD1(effAccountId, effApiToken, effD1Id, sqlOrders);
     const r3 = await queryD1(effAccountId, effApiToken, effD1Id, sqlPOs);
     const r4 = await queryD1(effAccountId, effApiToken, effD1Id, sqlSettings);
+    const r5 = await queryD1(effAccountId, effApiToken, effD1Id, sqlSkus);
+    const r6 = await queryD1(effAccountId, effApiToken, effD1Id, sqlCategories);
 
     const success = Boolean(r1?.success && r2?.success && r3?.success);
     return res.json({
       success,
-      message: success ? 'Cloudflare D1 SQL tables created successfully!' : 'D1 schema initialization failed.'
+      message: success ? 'Cloudflare D1 SQL tables (products, orders, purchase_orders, store_settings, model_skus, categories) created successfully!' : 'D1 schema initialization failed.'
     });
   });
 
@@ -227,6 +231,38 @@ async function startServer() {
              payload=excluded.payload, updatedAt=excluded.updatedAt;`,
           ['main_settings', JSON.stringify(storeSettings), new Date().toISOString()]
         );
+
+        // Also upsert individual categories into dedicated categories table
+        if (Array.isArray(storeSettings.customCategories)) {
+          for (const cat of storeSettings.customCategories) {
+            if (cat && typeof cat === 'string') {
+              await queryD1(
+                effAccountId,
+                effApiToken,
+                effD1Id,
+                `INSERT INTO categories (name, description, createdAt) VALUES (?, ?, ?)
+                 ON CONFLICT(name) DO NOTHING;`,
+                [cat.trim(), 'Shoe Category', new Date().toISOString()]
+              );
+            }
+          }
+        }
+
+        // Also upsert individual SKUs into dedicated model_skus table
+        if (Array.isArray(storeSettings.customSkus)) {
+          for (const skuCode of storeSettings.customSkus) {
+            if (skuCode && typeof skuCode === 'string') {
+              await queryD1(
+                effAccountId,
+                effApiToken,
+                effD1Id,
+                `INSERT INTO model_skus (sku, name, description, createdAt) VALUES (?, ?, ?, ?)
+                 ON CONFLICT(sku) DO NOTHING;`,
+                [skuCode.trim().toUpperCase(), skuCode.trim().toUpperCase(), 'Footwear Model SKU', new Date().toISOString()]
+              );
+            }
+          }
+        }
       }
 
       return res.json({
@@ -252,6 +288,8 @@ async function startServer() {
       const oRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM orders;');
       const poRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM purchase_orders;');
       const sRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM store_settings WHERE id = "main_settings";');
+      const catRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT name FROM categories;');
+      const skuRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT sku FROM model_skus;');
 
       let cloudProducts: any[] = [];
       if (pRes?.success && pRes.result?.[0]?.results) {
@@ -283,13 +321,31 @@ async function startServer() {
         cloudPOs = memoryStore.purchaseOrders;
       }
 
-      let cloudSettings = undefined;
+      let cloudSettings: any = undefined;
       if (sRes?.result?.[0]?.results?.[0]?.payload) {
         try {
           cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
         } catch (e) {}
       }
-      const finalSettings = cloudSettings || memoryStore.storeSettings;
+      const finalSettings: any = cloudSettings || memoryStore.storeSettings || {};
+
+      // Merge dedicated categories table results
+      const d1Categories = (catRes?.result?.[0]?.results || []).map((r: any) => r.name).filter(Boolean);
+      if (d1Categories.length > 0) {
+        finalSettings.customCategories = Array.from(new Set([
+          ...(finalSettings.customCategories || []),
+          ...d1Categories
+        ]));
+      }
+
+      // Merge dedicated model_skus table results
+      const d1Skus = (skuRes?.result?.[0]?.results || []).map((r: any) => r.sku).filter(Boolean);
+      if (d1Skus.length > 0) {
+        finalSettings.customSkus = Array.from(new Set([
+          ...(finalSettings.customSkus || []),
+          ...d1Skus
+        ]));
+      }
 
       return res.json({
         success: true,

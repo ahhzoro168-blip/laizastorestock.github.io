@@ -183,14 +183,18 @@ export async function initCloudflareD1Schema(config?: CloudflareConfig) {
     const sqlOrders = `CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, orderNumber TEXT, totalAmount REAL, payload TEXT, createdAt TEXT);`;
     const sqlPOs = `CREATE TABLE IF NOT EXISTS purchase_orders (id TEXT PRIMARY KEY, poNumber TEXT, status TEXT, payload TEXT, createdAt TEXT);`;
     const sqlSettings = `CREATE TABLE IF NOT EXISTS store_settings (id TEXT PRIMARY KEY, payload TEXT, updatedAt TEXT);`;
+    const sqlSkus = `CREATE TABLE IF NOT EXISTS model_skus (sku TEXT PRIMARY KEY, name TEXT, description TEXT, createdAt TEXT);`;
+    const sqlCategories = `CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY, description TEXT, createdAt TEXT);`;
 
     const r1 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlProducts);
     const r2 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlOrders);
     const r3 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlPOs);
     const r4 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlSettings);
+    const r5 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlSkus);
+    const r6 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlCategories);
 
     if (r1?.success && r2?.success && r3?.success) {
-      return { success: true, message: 'Cloudflare D1 SQL tables created successfully!' };
+      return { success: true, message: 'Cloudflare D1 SQL tables (products, orders, purchase_orders, store_settings, model_skus, categories) created successfully!' };
     }
   }
 
@@ -295,6 +299,36 @@ export async function pushDataToCloudflare(
              payload=excluded.payload, updatedAt=excluded.updatedAt;`,
           ['main_settings', JSON.stringify(storeSettings), new Date().toISOString()]
         );
+
+        if (Array.isArray(storeSettings.customCategories)) {
+          for (const cat of storeSettings.customCategories) {
+            if (cat && typeof cat === 'string') {
+              await directCloudflareD1Query(
+                accountId,
+                apiToken,
+                d1DatabaseId,
+                `INSERT INTO categories (name, description, createdAt) VALUES (?, ?, ?)
+                 ON CONFLICT(name) DO NOTHING;`,
+                [cat.trim(), 'Shoe Category', new Date().toISOString()]
+              );
+            }
+          }
+        }
+
+        if (Array.isArray(storeSettings.customSkus)) {
+          for (const sku of storeSettings.customSkus) {
+            if (sku && typeof sku === 'string') {
+              await directCloudflareD1Query(
+                accountId,
+                apiToken,
+                d1DatabaseId,
+                `INSERT INTO model_skus (sku, name, description, createdAt) VALUES (?, ?, ?, ?)
+                 ON CONFLICT(sku) DO NOTHING;`,
+                [sku.trim().toUpperCase(), sku.trim().toUpperCase(), 'Footwear Model SKU', new Date().toISOString()]
+              );
+            }
+          }
+        }
       }
 
       return { success: true, message: `Synced ${products.length} footwear items & records to Cloudflare D1!` };
@@ -330,6 +364,8 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig): Promise
       const oRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM orders;');
       const poRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM purchase_orders;');
       const sRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM store_settings WHERE id = "main_settings";');
+      const catRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT name FROM categories;');
+      const skuRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT sku FROM model_skus;');
 
       if (pRes?.success && pRes.result?.[0]?.results) {
         const cloudProducts = pRes.result[0].results.map((r: any) => {
@@ -344,18 +380,35 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig): Promise
           try { return JSON.parse(r.payload); } catch (e) { return null; }
         }).filter(Boolean);
 
-        let cloudSettings = undefined;
+        let cloudSettings: any = undefined;
         if (sRes?.result?.[0]?.results?.[0]?.payload) {
           try {
             cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
           } catch (e) {}
+        }
+        const finalSettings: any = cloudSettings || {};
+
+        const d1Categories = (catRes?.result?.[0]?.results || []).map((r: any) => r.name).filter(Boolean);
+        if (d1Categories.length > 0) {
+          finalSettings.customCategories = Array.from(new Set([
+            ...(finalSettings.customCategories || []),
+            ...d1Categories
+          ]));
+        }
+
+        const d1Skus = (skuRes?.result?.[0]?.results || []).map((r: any) => r.sku).filter(Boolean);
+        if (d1Skus.length > 0) {
+          finalSettings.customSkus = Array.from(new Set([
+            ...(finalSettings.customSkus || []),
+            ...d1Skus
+          ]));
         }
 
         return {
           products: cloudProducts,
           orders: cloudOrders,
           purchaseOrders: cloudPOs,
-          storeSettings: cloudSettings
+          storeSettings: finalSettings
         };
       }
     } catch (e) {}
