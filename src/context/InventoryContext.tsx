@@ -35,6 +35,7 @@ import {
   WOMEN_SIZES,
   ALL_COLORS
 } from '../data/mockData';
+import DEFAULT_STORE_LOGO_IMG from '../assets/images/laiza_store_logo_1790350995561.jpg';
 
 export interface LowStockAlertItem {
   productId: string;
@@ -125,7 +126,7 @@ const STORAGE_KEY_DELETED_PRODUCT_IDS = 'soletrack_deleted_product_ids_v2';
 const STORAGE_KEY_STORE_NAME = 'soletrack_store_name_v2';
 const STORAGE_KEY_STORE_LOGO = 'soletrack_store_logo_v2';
 export const DEFAULT_STORE_NAME = 'Laiza Store';
-export const DEFAULT_STORE_LOGO = '/src/assets/images/laiza_store_logo_1790350995561.jpg';
+export const DEFAULT_STORE_LOGO = DEFAULT_STORE_LOGO_IMG;
 
 const getDeletedProductIds = (): Set<string> => {
   if (typeof window === 'undefined') return new Set();

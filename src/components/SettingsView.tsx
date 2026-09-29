@@ -38,7 +38,7 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defaultSection, onBackToSettings }) => {
   const { products, orders, purchaseOrders, clearAllData, storeName, storeLogo, categories, modelSkus, updateStoreProfile } = useInventory();
-  const { uploadProductPhoto, syncToCloudflare } = useCloudflare();
+  const { uploadProductPhoto, syncToCloudflare, config } = useCloudflare();
   const { theme, toggleTheme, setTheme } = useTheme();
   const isLight = theme === 'light';
   const [activeSettingsSection, setActiveSettingsSection] = useState<'general' | 'cloudflare' | 'catalog' | 'seasonal' | null>(defaultSection ?? null);
@@ -462,6 +462,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defa
                       <span>Reset</span>
                     </button>
                   )}
+                </div>
+
+                {/* Cloudflare R2 Bucket Upload Helper */}
+                <div className="pt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between gap-2 border-t border-slate-200/60 dark:border-slate-800/60 mt-2">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Cloud className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                    <span className="truncate">
+                      R2 Bucket: <strong className="text-slate-700 dark:text-slate-300 font-mono">laiza-store-images</strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSettingsSection('cloudflare')}
+                    className="text-pink-500 hover:text-pink-600 font-semibold underline underline-offset-2 shrink-0 cursor-pointer text-[11px]"
+                  >
+                    Configure API Token →
+                  </button>
                 </div>
               </div>
             </div>
