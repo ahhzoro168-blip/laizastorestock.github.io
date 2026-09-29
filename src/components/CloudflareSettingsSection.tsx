@@ -227,6 +227,35 @@ export const CloudflareSettingsSection: React.FC = () => {
             </div>
           </div>
 
+          {/* Multi-Device Auto-Sync Switch & Card */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shadow-sm dark:shadow-md">
+            <div>
+              <div className="flex items-center gap-2">
+                <RefreshCw className={`w-4 h-4 text-pink-500 dark:text-pink-400 ${autoSyncEnabled ? 'animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Real-Time Multi-Device Auto-Sync</h4>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                  {autoSyncEnabled ? 'Active' : 'Paused'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Automatically synchronizes stock deductions, sales, and catalog edits across all connected phones, tablets, and PCs in real-time.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={autoSyncEnabled}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setAutoSyncEnabled(val);
+                  updateConfig({ autoSyncEnabled: val });
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-500"></div>
+            </label>
+          </div>
+
           {/* D1 Table Schema Initialization Card */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shadow-sm dark:shadow-md">
             <div>

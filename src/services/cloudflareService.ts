@@ -148,6 +148,18 @@ export async function fetchCloudflareStatus(config?: CloudflareConfig) {
   };
 }
 
+export interface StoreCloudData {
+  products: ShoeProduct[];
+  orders: SaleOrder[];
+  purchaseOrders: PurchaseOrder[];
+  storeSettings?: {
+    storeName?: string;
+    storeLogo?: string;
+    customCategories?: string[];
+    customSkus?: string[];
+  };
+}
+
 export async function initCloudflareD1Schema(config?: CloudflareConfig) {
   const activeConfig = config || getLocalCloudflareConfig();
   const { accountId, apiToken, d1DatabaseId } = activeConfig;
@@ -170,10 +182,12 @@ export async function initCloudflareD1Schema(config?: CloudflareConfig) {
     const sqlProducts = `CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, name TEXT, sku TEXT, gender TEXT, category TEXT, costPrice REAL, retailPrice REAL, totalStock INTEGER, payload TEXT, createdAt TEXT);`;
     const sqlOrders = `CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, orderNumber TEXT, totalAmount REAL, payload TEXT, createdAt TEXT);`;
     const sqlPOs = `CREATE TABLE IF NOT EXISTS purchase_orders (id TEXT PRIMARY KEY, poNumber TEXT, status TEXT, payload TEXT, createdAt TEXT);`;
+    const sqlSettings = `CREATE TABLE IF NOT EXISTS store_settings (id TEXT PRIMARY KEY, payload TEXT, updatedAt TEXT);`;
 
     const r1 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlProducts);
     const r2 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlOrders);
     const r3 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlPOs);
+    const r4 = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, sqlSettings);
 
     if (r1?.success && r2?.success && r3?.success) {
       return { success: true, message: 'Cloudflare D1 SQL tables created successfully!' };
@@ -188,6 +202,7 @@ export async function pushDataToCloudflare(
   products: ShoeProduct[],
   orders: SaleOrder[],
   purchaseOrders: PurchaseOrder[],
+  storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] },
   config?: CloudflareConfig
 ) {
   const activeConfig = config || getLocalCloudflareConfig();
@@ -209,7 +224,8 @@ export async function pushDataToCloudflare(
         config: activeConfig,
         products,
         orders,
-        purchaseOrders
+        purchaseOrders,
+        storeSettings
       })
     });
     if (res.ok) {
@@ -220,7 +236,8 @@ export async function pushDataToCloudflare(
   // 2. Try direct Cloudflare D1 push
   if (accountId && apiToken && d1DatabaseId) {
     try {
-      for (const p of products.slice(0, 50)) {
+      // Upsert products
+      for (const p of products) {
         const payload = JSON.stringify(p);
         await directCloudflareD1Query(
           accountId,
@@ -235,14 +252,59 @@ export async function pushDataToCloudflare(
           [p.id, p.name, p.sku, p.gender, p.category, p.costPrice, p.retailPrice, p.totalStock || 0, payload, p.createdAt || new Date().toISOString()]
         );
       }
-      return { success: true, message: `Synced ${products.length} footwear items to Cloudflare D1!` };
+
+      // Upsert orders
+      for (const o of orders) {
+        const payload = JSON.stringify(o);
+        await directCloudflareD1Query(
+          accountId,
+          apiToken,
+          d1DatabaseId,
+          `INSERT INTO orders (id, orderNumber, totalAmount, payload, createdAt) 
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET 
+             orderNumber=excluded.orderNumber, totalAmount=excluded.totalAmount, payload=excluded.payload, createdAt=excluded.createdAt;`,
+          [o.id, o.orderNumber, o.totalAmount, payload, o.createdAt || new Date().toISOString()]
+        );
+      }
+
+      // Upsert purchase orders
+      for (const po of purchaseOrders) {
+        const payload = JSON.stringify(po);
+        await directCloudflareD1Query(
+          accountId,
+          apiToken,
+          d1DatabaseId,
+          `INSERT INTO purchase_orders (id, poNumber, status, payload, createdAt) 
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET 
+             poNumber=excluded.poNumber, status=excluded.status, payload=excluded.payload, createdAt=excluded.createdAt;`,
+          [po.id, po.poNumber, po.status, payload, po.createdAt || new Date().toISOString()]
+        );
+      }
+
+      // Upsert store settings if present
+      if (storeSettings) {
+        await directCloudflareD1Query(
+          accountId,
+          apiToken,
+          d1DatabaseId,
+          `INSERT INTO store_settings (id, payload, updatedAt) 
+           VALUES (?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET 
+             payload=excluded.payload, updatedAt=excluded.updatedAt;`,
+          ['main_settings', JSON.stringify(storeSettings), new Date().toISOString()]
+        );
+      }
+
+      return { success: true, message: `Synced ${products.length} footwear items & records to Cloudflare D1!` };
     } catch (e) {}
   }
 
   return { success: true, message: `Synced ${products.length} products to Cloudflare synchronized storage!` };
 }
 
-export async function pullDataFromCloudflare(config?: CloudflareConfig) {
+export async function pullDataFromCloudflare(config?: CloudflareConfig): Promise<StoreCloudData | null> {
   const activeConfig = config || getLocalCloudflareConfig();
   const { accountId, apiToken, d1DatabaseId } = activeConfig;
 
@@ -256,11 +318,7 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig) {
     if (res.ok) {
       const json = await res.json();
       if (json.success && json.data) {
-        return json.data as {
-          products: ShoeProduct[];
-          orders: SaleOrder[];
-          purchaseOrders: PurchaseOrder[];
-        };
+        return json.data as StoreCloudData;
       }
     }
   } catch (e) {}
@@ -271,6 +329,7 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig) {
       const pRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM products;');
       const oRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM orders;');
       const poRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM purchase_orders;');
+      const sRes = await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'SELECT payload FROM store_settings WHERE id = "main_settings";');
 
       if (pRes?.success && pRes.result?.[0]?.results) {
         const cloudProducts = pRes.result[0].results.map((r: any) => {
@@ -285,10 +344,18 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig) {
           try { return JSON.parse(r.payload); } catch (e) { return null; }
         }).filter(Boolean);
 
+        let cloudSettings = undefined;
+        if (sRes?.result?.[0]?.results?.[0]?.payload) {
+          try {
+            cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
+          } catch (e) {}
+        }
+
         return {
           products: cloudProducts,
           orders: cloudOrders,
-          purchaseOrders: cloudPOs
+          purchaseOrders: cloudPOs,
+          storeSettings: cloudSettings
         };
       }
     } catch (e) {}
@@ -309,6 +376,18 @@ export async function pullDataFromCloudflare(config?: CloudflareConfig) {
   } catch (e) {}
 
   return null;
+}
+
+export async function deleteProductFromCloudflare(productId: string, config?: CloudflareConfig) {
+  const activeConfig = config || getLocalCloudflareConfig();
+  const { accountId, apiToken, d1DatabaseId } = activeConfig;
+  if (accountId && apiToken && d1DatabaseId) {
+    try {
+      await directCloudflareD1Query(accountId, apiToken, d1DatabaseId, 'DELETE FROM products WHERE id = ?;', [productId]);
+    } catch (e) {
+      console.error('Failed deleting product from Cloudflare D1:', e);
+    }
+  }
 }
 
 export async function uploadImageToCloudflareR2(

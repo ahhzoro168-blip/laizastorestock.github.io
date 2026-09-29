@@ -16,8 +16,8 @@ import { AddProductModal } from './components/AddProductModal';
 import { ShoeProduct, ShoeColor, SaleOrder } from './types';
 
 const MainApp: React.FC = () => {
-  const { products, orders, purchaseOrders } = useInventory();
-  const { config, syncToCloudflare } = useCloudflare();
+  const { products, orders, purchaseOrders, storeName, storeLogo, categories, modelSkus, restoreAllData } = useInventory();
+  const { config, syncToCloudflare, syncFromCloudflare } = useCloudflare();
   const { theme } = useTheme();
 
   // Navigation & Modals State
@@ -39,15 +39,101 @@ const MainApp: React.FC = () => {
   const [receiptOrder, setReceiptOrder] = useState<SaleOrder | null>(null);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState<string>('');
 
-  // Auto-sync to Cloudflare D1 Storage whenever products or orders change if autoSyncEnabled is true
+  // 1. Initial Cloud Sync on Startup: Fetch latest stock from Cloudflare D1 across all devices
   useEffect(() => {
-    if (config.autoSyncEnabled && (products.length > 0 || orders.length > 0)) {
+    let isMounted = true;
+    const initialFetch = async () => {
+      try {
+        const cloudData = await syncFromCloudflare();
+        if (isMounted && cloudData && (cloudData.products.length > 0 || cloudData.orders.length > 0)) {
+          restoreAllData(cloudData);
+        }
+      } catch (err) {
+        console.warn('Initial Cloudflare sync note:', err);
+      }
+    };
+    initialFetch();
+    return () => { isMounted = false; };
+  }, []);
+
+  // 2. Real-time Multi-Device Auto-Sync: Poll Cloudflare D1 periodically & on window focus/visibility
+  useEffect(() => {
+    if (!config.autoSyncEnabled) return;
+
+    let isFetching = false;
+    const fetchLatestCloudData = async () => {
+      if (isFetching || document.hidden) return;
+      isFetching = true;
+      try {
+        const cloudData = await syncFromCloudflare();
+        if (cloudData && (cloudData.products.length > 0 || cloudData.orders.length > 0 || cloudData.purchaseOrders.length > 0)) {
+          restoreAllData(cloudData);
+        }
+      } catch (e) {
+        // silent background sync
+      } finally {
+        isFetching = false;
+      }
+    };
+
+    // Periodic sync every 10 seconds
+    const interval = setInterval(fetchLatestCloudData, 10000);
+
+    // Sync immediately when user switches tabs or returns to phone/tablet browser
+    const handleVisibilityOrFocus = () => {
+      if (!document.hidden) {
+        fetchLatestCloudData();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    window.addEventListener('online', handleVisibilityOrFocus);
+
+    // BroadcastChannel for instant cross-tab sync on same device
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('soletrack_device_sync');
+        channel.onmessage = (event) => {
+          if (event.data === 'sync_needed') {
+            fetchLatestCloudData();
+          }
+        };
+      }
+    } catch (e) {}
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      window.removeEventListener('online', handleVisibilityOrFocus);
+      if (channel) channel.close();
+    };
+  }, [config.autoSyncEnabled]);
+
+  // 3. Auto-push to Cloudflare D1 whenever local inventory, sales, or POs change
+  useEffect(() => {
+    if (config.autoSyncEnabled && (products.length > 0 || orders.length > 0 || purchaseOrders.length > 0 || storeName)) {
       const timer = setTimeout(() => {
-        syncToCloudflare(products, orders, purchaseOrders);
-      }, 4000);
+        syncToCloudflare(products, orders, purchaseOrders, {
+          storeName,
+          storeLogo,
+          customCategories: categories,
+          customSkus: modelSkus
+        }).then(() => {
+          try {
+            if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+              const channel = new BroadcastChannel('soletrack_device_sync');
+              channel.postMessage('sync_needed');
+              channel.close();
+            }
+          } catch (e) {}
+        });
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [products, orders, purchaseOrders, config.autoSyncEnabled]);
+  }, [products, orders, purchaseOrders, storeName, storeLogo, categories, modelSkus, config.autoSyncEnabled]);
 
   const handleOpenProductDetail = (product: ShoeProduct) => {
     setDetailProductId(product.id);

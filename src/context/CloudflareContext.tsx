@@ -23,8 +23,18 @@ interface CloudflareContextType {
   updateConfig: (newConfig: Partial<CloudflareConfig>) => void;
   testConnection: (cfg?: CloudflareConfig) => Promise<{ d1Connected: boolean; r2Connected: boolean; message: string }>;
   initSchema: (cfg?: CloudflareConfig) => Promise<boolean>;
-  syncToCloudflare: (products: ShoeProduct[], orders: SaleOrder[], purchaseOrders: PurchaseOrder[]) => Promise<boolean>;
-  syncFromCloudflare: () => Promise<{ products: ShoeProduct[]; orders: SaleOrder[]; purchaseOrders: PurchaseOrder[] } | null>;
+  syncToCloudflare: (
+    products: ShoeProduct[],
+    orders: SaleOrder[],
+    purchaseOrders: PurchaseOrder[],
+    storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] }
+  ) => Promise<boolean>;
+  syncFromCloudflare: () => Promise<{
+    products: ShoeProduct[];
+    orders: SaleOrder[];
+    purchaseOrders: PurchaseOrder[];
+    storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] };
+  } | null>;
   uploadProductPhoto: (base64Data: string, filename: string) => Promise<string>;
 }
 
@@ -100,13 +110,14 @@ export const CloudflareProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const syncToCloudflare = async (
     products: ShoeProduct[],
     orders: SaleOrder[],
-    purchaseOrders: PurchaseOrder[]
+    purchaseOrders: PurchaseOrder[],
+    storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] }
   ) => {
     setIsSyncing(true);
     setSyncStatus('syncing');
     setSyncError(null);
     try {
-      const res = await pushDataToCloudflare(products, orders, purchaseOrders, config);
+      const res = await pushDataToCloudflare(products, orders, purchaseOrders, storeSettings, config);
       if (res.success) {
         setSyncStatus('synced');
         const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });

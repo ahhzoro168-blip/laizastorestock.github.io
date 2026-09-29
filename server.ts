@@ -118,10 +118,12 @@ async function startServer() {
     const sqlProducts = `CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, name TEXT, sku TEXT, gender TEXT, category TEXT, costPrice REAL, retailPrice REAL, totalStock INTEGER, payload TEXT, createdAt TEXT);`;
     const sqlOrders = `CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, orderNumber TEXT, totalAmount REAL, payload TEXT, createdAt TEXT);`;
     const sqlPOs = `CREATE TABLE IF NOT EXISTS purchase_orders (id TEXT PRIMARY KEY, poNumber TEXT, status TEXT, payload TEXT, createdAt TEXT);`;
+    const sqlSettings = `CREATE TABLE IF NOT EXISTS store_settings (id TEXT PRIMARY KEY, payload TEXT, updatedAt TEXT);`;
 
     const r1 = await queryD1(effAccountId, effApiToken, effD1Id, sqlProducts);
     const r2 = await queryD1(effAccountId, effApiToken, effD1Id, sqlOrders);
     const r3 = await queryD1(effAccountId, effApiToken, effD1Id, sqlPOs);
+    const r4 = await queryD1(effAccountId, effApiToken, effD1Id, sqlSettings);
 
     const success = Boolean(r1?.success && r2?.success && r3?.success);
     return res.json({
@@ -131,7 +133,7 @@ async function startServer() {
   });
 
   app.post('/api/cloudflare/sync/push', async (req, res) => {
-    const { config, products = [], orders = [], purchaseOrders = [] } = req.body || {};
+    const { config, products = [], orders = [], purchaseOrders = [], storeSettings } = req.body || {};
     const effAccountId = config?.accountId || memoryStore.config.accountId;
     const effApiToken = config?.apiToken || memoryStore.config.apiToken;
     const effD1Id = config?.d1DatabaseId || memoryStore.config.d1DatabaseId;
@@ -189,9 +191,23 @@ async function startServer() {
         );
       }
 
+      // Upsert store settings to D1
+      if (storeSettings) {
+        await queryD1(
+          effAccountId,
+          effApiToken,
+          effD1Id,
+          `INSERT INTO store_settings (id, payload, updatedAt) 
+           VALUES (?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET 
+             payload=excluded.payload, updatedAt=excluded.updatedAt;`,
+          ['main_settings', JSON.stringify(storeSettings), new Date().toISOString()]
+        );
+      }
+
       return res.json({
         success: true,
-        message: `Successfully synchronized ${products.length} footwear products to Cloudflare D1!`
+        message: `Successfully synchronized ${products.length} footwear products and settings to Cloudflare D1!`
       });
     }
 
@@ -211,6 +227,7 @@ async function startServer() {
       const pRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM products;');
       const oRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM orders;');
       const poRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM purchase_orders;');
+      const sRes = await queryD1(effAccountId, effApiToken, effD1Id, 'SELECT payload FROM store_settings WHERE id = "main_settings";');
 
       if (pRes?.success && pRes.result?.[0]?.results) {
         const cloudProducts = pRes.result[0].results.map((r: any) => {
@@ -225,12 +242,20 @@ async function startServer() {
           try { return JSON.parse(r.payload); } catch (e) { return null; }
         }).filter(Boolean);
 
+        let cloudSettings = undefined;
+        if (sRes?.result?.[0]?.results?.[0]?.payload) {
+          try {
+            cloudSettings = JSON.parse(sRes.result[0].results[0].payload);
+          } catch (e) {}
+        }
+
         return res.json({
           success: true,
           data: {
             products: cloudProducts,
             orders: cloudOrders,
-            purchaseOrders: cloudPOs
+            purchaseOrders: cloudPOs,
+            storeSettings: cloudSettings
           }
         });
       }

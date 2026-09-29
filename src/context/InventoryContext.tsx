@@ -1162,7 +1162,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     saveStoreSettingsToFirestore({ customCategories: [], customSkus: [] }).catch(e => console.error(e));
   };
 
-  const restoreAllData = (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => {
+  const restoreAllData = (data: {
+    products?: ShoeProduct[];
+    orders?: SaleOrder[];
+    purchaseOrders?: PurchaseOrder[];
+    storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] };
+  }) => {
     if (data.products && Array.isArray(data.products)) {
       setProducts(data.products.map(p => ({
         ...p,
@@ -1174,6 +1179,24 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     if (data.purchaseOrders && Array.isArray(data.purchaseOrders)) {
       setPurchaseOrders(data.purchaseOrders);
+    }
+    if (data.storeSettings) {
+      if (data.storeSettings.storeName) {
+        setStoreNameState(data.storeSettings.storeName);
+        localStorage.setItem(STORAGE_KEY_STORE_NAME, data.storeSettings.storeName);
+      }
+      if (data.storeSettings.storeLogo) {
+        setStoreLogoState(data.storeSettings.storeLogo);
+        localStorage.setItem(STORAGE_KEY_STORE_LOGO, data.storeSettings.storeLogo);
+      }
+      if (Array.isArray(data.storeSettings.customCategories) && data.storeSettings.customCategories.length > 0) {
+        setCustomCategories(data.storeSettings.customCategories);
+        localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(data.storeSettings.customCategories));
+      }
+      if (Array.isArray(data.storeSettings.customSkus) && data.storeSettings.customSkus.length > 0) {
+        setCustomSkus(data.storeSettings.customSkus);
+        localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(data.storeSettings.customSkus));
+      }
     }
   };
 
