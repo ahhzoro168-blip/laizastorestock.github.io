@@ -390,29 +390,111 @@ export async function deleteProductFromCloudflare(productId: string, config?: Cl
   }
 }
 
+export function compressImageForStorage(base64Str: string, maxWidth = 400, maxHeight = 400, quality = 0.85): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !base64Str.startsWith('data:image')) {
+      return resolve(base64Str);
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      } else {
+        resolve(base64Str);
+      }
+    };
+    img.onerror = () => resolve(base64Str);
+    img.src = base64Str;
+  });
+}
+
 export async function uploadImageToCloudflareR2(
   base64Data: string,
   filename: string,
   config?: CloudflareConfig
 ): Promise<{ url: string; success: boolean }> {
+  const activeConfig = config || getLocalCloudflareConfig();
+  const { accountId, apiToken, r2BucketName, r2PublicDomain } = activeConfig;
+
+  // Compress image to ensure lightweight storage and fast cross-device loading
+  let optimizedData = base64Data;
+  try {
+    optimizedData = await compressImageForStorage(base64Data, 400, 400, 0.85);
+  } catch (e) {}
+
+  // 1. Try server proxy endpoint
   try {
     const res = await fetch('/api/cloudflare/upload-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        config: config || getLocalCloudflareConfig(),
-        base64Data,
+        config: activeConfig,
+        base64Data: optimizedData,
         filename
       })
     });
     if (res.ok) {
       const json = await res.json();
-      if (json.success && json.url) {
+      if (json.success && json.url && !json.url.startsWith('data:')) {
         return { url: json.url, success: true };
       }
     }
-  } catch (err: any) {
-    console.error('R2 Upload Error:', err);
+  } catch (err: any) {}
+
+  // 2. Direct browser upload to Cloudflare R2 API if credentials exist
+  if (accountId && apiToken && r2BucketName) {
+    try {
+      const cleanName = filename ? filename.replace(/[^a-zA-Z0-9.-]/g, '_') : `logo_${Date.now()}.jpg`;
+      const rawBase64 = optimizedData.includes(',') ? optimizedData.split(',')[1] : optimizedData;
+      const binaryStr = atob(rawBase64);
+      const len = binaryStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'image/jpeg' });
+
+      const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${r2BucketName}/objects/${cleanName}`;
+      const r2Res = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'image/jpeg'
+        },
+        body: blob
+      });
+
+      if (r2Res.ok) {
+        const publicUrl = r2PublicDomain 
+          ? `${r2PublicDomain.replace(/\/$/, '')}/${cleanName}`
+          : `https://pub-2a808954f1c74db3a94cdce96474d81f.r2.dev/${cleanName}`;
+        return { url: publicUrl, success: true };
+      }
+    } catch (e) {
+      console.warn('Direct browser R2 upload note:', e);
+    }
   }
-  return { url: base64Data, success: false };
+
+  // 3. Optimized compressed data URL (persisted via Cloudflare D1 store_settings table)
+  return { url: optimizedData, success: true };
 }

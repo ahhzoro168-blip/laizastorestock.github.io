@@ -45,7 +45,12 @@ const MainApp: React.FC = () => {
     const initialFetch = async () => {
       try {
         const cloudData = await syncFromCloudflare();
-        if (isMounted && cloudData && (cloudData.products.length > 0 || cloudData.orders.length > 0)) {
+        if (isMounted && cloudData && (
+          cloudData.products?.length > 0 || 
+          cloudData.orders?.length > 0 || 
+          cloudData.purchaseOrders?.length > 0 || 
+          Boolean(cloudData.storeSettings)
+        )) {
           restoreAllData(cloudData);
         }
       } catch (err) {
@@ -66,7 +71,12 @@ const MainApp: React.FC = () => {
       isFetching = true;
       try {
         const cloudData = await syncFromCloudflare();
-        if (cloudData && (cloudData.products.length > 0 || cloudData.orders.length > 0 || cloudData.purchaseOrders.length > 0)) {
+        if (cloudData && (
+          cloudData.products?.length > 0 || 
+          cloudData.orders?.length > 0 || 
+          cloudData.purchaseOrders?.length > 0 || 
+          Boolean(cloudData.storeSettings)
+        )) {
           restoreAllData(cloudData);
         }
       } catch (e) {

@@ -28,6 +28,7 @@ async function startServer() {
     products: [] as any[],
     orders: [] as any[],
     purchaseOrders: [] as any[],
+    storeSettings: null as any,
     config: {
       accountId: process.env.CLOUDFLARE_ACCOUNT_ID || '62b64801700fa9050dbc39cdc9174d38',
       apiToken: process.env.CLOUDFLARE_API_TOKEN || '',
@@ -142,6 +143,9 @@ async function startServer() {
     memoryStore.products = products;
     memoryStore.orders = orders;
     memoryStore.purchaseOrders = purchaseOrders;
+    if (storeSettings) {
+      memoryStore.storeSettings = storeSettings;
+    }
 
     if (effAccountId && effApiToken && effD1Id) {
       // Upsert products to D1
@@ -267,7 +271,8 @@ async function startServer() {
       data: {
         products: memoryStore.products,
         orders: memoryStore.orders,
-        purchaseOrders: memoryStore.purchaseOrders
+        purchaseOrders: memoryStore.purchaseOrders,
+        storeSettings: memoryStore.storeSettings
       }
     });
   });
