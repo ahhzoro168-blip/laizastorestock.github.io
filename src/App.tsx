@@ -39,22 +39,23 @@ const MainApp: React.FC = () => {
   const [receiptOrder, setReceiptOrder] = useState<SaleOrder | null>(null);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState<string>('');
 
+  const hasInitialFetchedRef = React.useRef(false);
+
   // 1. Initial Cloud Sync on Startup: Fetch latest stock from Cloudflare D1 across all devices
   useEffect(() => {
     let isMounted = true;
     const initialFetch = async () => {
       try {
         const cloudData = await syncFromCloudflare();
-        if (isMounted && cloudData && (
-          cloudData.products?.length > 0 || 
-          cloudData.orders?.length > 0 || 
-          cloudData.purchaseOrders?.length > 0 || 
-          Boolean(cloudData.storeSettings)
-        )) {
+        if (isMounted && cloudData) {
           restoreAllData(cloudData);
         }
       } catch (err) {
         console.warn('Initial Cloudflare sync note:', err);
+      } finally {
+        if (isMounted) {
+          hasInitialFetchedRef.current = true;
+        }
       }
     };
     initialFetch();
@@ -71,12 +72,7 @@ const MainApp: React.FC = () => {
       isFetching = true;
       try {
         const cloudData = await syncFromCloudflare();
-        if (cloudData && (
-          cloudData.products?.length > 0 || 
-          cloudData.orders?.length > 0 || 
-          cloudData.purchaseOrders?.length > 0 || 
-          Boolean(cloudData.storeSettings)
-        )) {
+        if (cloudData) {
           restoreAllData(cloudData);
         }
       } catch (e) {
@@ -86,8 +82,8 @@ const MainApp: React.FC = () => {
       }
     };
 
-    // Periodic sync every 10 seconds
-    const interval = setInterval(fetchLatestCloudData, 10000);
+    // Fast polling every 5 seconds across phones, tablets, and PCs
+    const interval = setInterval(fetchLatestCloudData, 5000);
 
     // Sync immediately when user switches tabs or returns to phone/tablet browser
     const handleVisibilityOrFocus = () => {
@@ -122,9 +118,11 @@ const MainApp: React.FC = () => {
     };
   }, [config.autoSyncEnabled]);
 
-  // 3. Auto-push to Cloudflare D1 whenever local inventory, sales, or POs change
+  // 3. Auto-push to Cloudflare D1 whenever local inventory, sales, or POs change (only after initial load)
   useEffect(() => {
-    if (config.autoSyncEnabled && (products.length > 0 || orders.length > 0 || purchaseOrders.length > 0 || storeName)) {
+    if (!hasInitialFetchedRef.current) return; // Prevent overwriting cloud data on startup!
+
+    if (config.autoSyncEnabled && (products.length > 0 || orders.length > 0 || purchaseOrders.length > 0 || categories.length > 0 || modelSkus.length > 0)) {
       const timer = setTimeout(() => {
         syncToCloudflare(products, orders, purchaseOrders, {
           storeName,

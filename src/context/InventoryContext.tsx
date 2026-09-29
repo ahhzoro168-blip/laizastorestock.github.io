@@ -1229,16 +1229,20 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     storeSettings?: { storeName?: string; storeLogo?: string; customCategories?: string[]; customSkus?: string[] };
   }) => {
     if (data.products && Array.isArray(data.products)) {
-      setProducts(data.products.map(p => ({
+      const calculated = data.products.map(p => ({
         ...p,
         totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0)
-      })));
+      }));
+      setProducts(calculated);
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(calculated));
     }
     if (data.orders && Array.isArray(data.orders)) {
       setOrders(data.orders);
+      localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(data.orders));
     }
     if (data.purchaseOrders && Array.isArray(data.purchaseOrders)) {
       setPurchaseOrders(data.purchaseOrders);
+      localStorage.setItem(STORAGE_KEY_PO, JSON.stringify(data.purchaseOrders));
     }
     if (data.storeSettings) {
       if (data.storeSettings.storeName) {
