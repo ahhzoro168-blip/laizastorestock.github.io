@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ShoeGender, ShoeColor, ShoeVariant } from '../types';
 import { useInventory } from '../context/InventoryContext';
-import { useGoogleAuth } from '../context/GoogleAuthContext';
+import { useCloudflare } from '../context/CloudflareContext';
 import { compressImageDataUrl } from '../utils/imageCompressor';
 
 interface AddProductModalProps {
@@ -70,9 +70,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const { 
     addProduct, 
     categories: registeredCategories, 
-    modelSkus: registeredSkus
+    modelSkus: registeredSkus,
+    addCategory,
+    addModelSku
   } = useInventory();
-  const { user, uploadProductPhoto } = useGoogleAuth();
+  const { uploadProductPhoto } = useCloudflare();
   const [isSavingWithDrive, setIsSavingWithDrive] = useState(false);
 
   // Basic Information
@@ -266,17 +268,15 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       }
     }
 
-    // If user is connected to Google, upload colorway images to Google Drive
-    if (user) {
-      for (let i = 0; i < updatedColorways.length; i++) {
-        const cw = updatedColorways[i];
-        if (cw.image && cw.image.startsWith('data:')) {
-          try {
-            const driveUrl = await uploadProductPhoto(cw.image, `${finalSku}-${cw.colorName}.jpg`);
-            updatedColorways[i] = { ...cw, image: driveUrl };
-          } catch (err) {
-            console.warn('Could not upload photo to Drive, using local photo:', err);
-          }
+    // Upload colorway images to Cloudflare R2 object storage if configured
+    for (let i = 0; i < updatedColorways.length; i++) {
+      const cw = updatedColorways[i];
+      if (cw.image && cw.image.startsWith('data:')) {
+        try {
+          const cloudUrl = await uploadProductPhoto(cw.image, `${finalSku}-${cw.colorName}.jpg`);
+          updatedColorways[i] = { ...cw, image: cloudUrl };
+        } catch (err) {
+          console.warn('Could not upload photo to Cloudflare R2, using local photo:', err);
         }
       }
     }
@@ -319,11 +319,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     const parsedCostPrice = costPrice !== '' ? parseFloat(costPrice) || 0 : 0;
     const parsedRetailPrice = retailPrice !== '' ? parseFloat(retailPrice) || 0 : 0;
 
+    const cleanCategory = category.trim() || 'General';
+
+    // Auto-register new SKU and Category if not already registered
+    if (finalSku && !registeredSkus.includes(finalSku)) {
+      addModelSku(finalSku);
+    }
+    if (cleanCategory && !registeredCategories.includes(cleanCategory)) {
+      addCategory(cleanCategory);
+    }
+
     addProduct({
       name: name.trim(),
       sku: finalSku,
       gender,
-      category,
+      category: cleanCategory,
       costPrice: parsedCostPrice,
       retailPrice: parsedRetailPrice,
       images: defaultShoeImg,
@@ -339,7 +349,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         origin: 'Imported',
         careInstructions: 'Wipe clean with a damp cloth'
       },
-      tags: [category, gender]
+      tags: [cleanCategory, gender]
     });
 
     resetForm();
@@ -348,25 +358,25 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 transition-all">
-      <div className="w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200">
+      <div className="w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200">
         
         {/* Mobile Drag Indicator */}
-        <div className="w-12 h-1 bg-slate-700/80 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+        <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700/80 rounded-full mx-auto my-2 sm:hidden shrink-0" />
 
         {/* Modal Header */}
-        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900">
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-white font-['Syne']">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-['Syne']">
               Add New Shoe Product
             </h2>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Publish footwear model, manage colorways & sizes
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -378,7 +388,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           
           {/* Product Name */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               Product Name *
             </label>
             <input
@@ -387,13 +397,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               placeholder="e.g. Apex Velocity Pro Sneaker"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-pink-500 transition-colors"
             />
           </div>
 
           {/* Gender Selector */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               Gender & Size Range
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -402,8 +412,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 onClick={() => handleGenderChange('men')}
                 className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                   gender === 'men'
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-pink-50 dark:bg-pink-500/20 border-pink-400 text-pink-600 dark:text-pink-300 ring-1 ring-pink-400/40 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span>Men (Sizes 40–44)</span>
@@ -413,8 +423,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 onClick={() => handleGenderChange('women')}
                 className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                   gender === 'women'
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-1 ring-amber-400/40 shadow-sm'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-pink-50 dark:bg-pink-500/20 border-pink-400 text-pink-600 dark:text-pink-300 ring-1 ring-pink-400/40 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span>Women (Sizes 36–40)</span>
@@ -425,47 +435,52 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Model SKU & Category Row */}
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Model SKU
               </label>
               <div className="relative">
-                <select
+                <input
+                  type="text"
+                  list="sku-datalist"
+                  placeholder="e.g. ST-01, RUNNER-01"
                   value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
-                >
-                  <option value="">-- Select SKU --</option>
+                  onChange={(e) => setSku(e.target.value.toUpperCase())}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-pink-600 dark:text-pink-400 placeholder:text-slate-400 focus:outline-none focus:border-pink-500 uppercase"
+                />
+                <datalist id="sku-datalist">
                   {skuList.map(s => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s} />
                   ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </datalist>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Shoe Category
               </label>
               <div className="relative">
-                <select
+                <input
+                  type="text"
+                  list="category-datalist"
+                  placeholder="e.g. Sneakers, Loafers"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
-                >
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-pink-500"
+                />
+                <datalist id="category-datalist">
                   {categories.map(c => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c} />
                   ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </datalist>
               </div>
             </div>
           </div>
 
           {/* Pricing Row (Cost & Retail Price without pre-filled '0') */}
-          <div className="grid grid-cols-2 gap-2.5 p-3 bg-slate-950/80 rounded-2xl border border-slate-800">
+          <div className="grid grid-cols-2 gap-2.5 p-3 bg-slate-50 dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                 Cost Price (៛)
               </label>
               <div className="relative">
@@ -476,14 +491,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   placeholder="0"
                   value={costPrice}
                   onChange={(e) => setCostPrice(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                 />
-                <span className="absolute right-2.5 top-2 text-slate-500 text-xs font-bold">៛</span>
+                <span className="absolute right-2.5 top-2 text-slate-400 dark:text-slate-500 text-xs font-bold">៛</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                 Retail Price (៛)
               </label>
               <div className="relative">
@@ -494,21 +509,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   placeholder="0"
                   value={retailPrice}
                   onChange={(e) => setRetailPrice(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                 />
-                <span className="absolute right-2.5 top-2 text-amber-500 text-xs font-bold">៛</span>
+                <span className="absolute right-2.5 top-2 text-pink-500 text-xs font-bold">៛</span>
               </div>
             </div>
           </div>
 
           {/* Shoe Colors Section */}
-          <div className="pt-2 border-t border-slate-800 space-y-3">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                <div className="w-6 h-6 rounded-lg bg-pink-50 dark:bg-pink-500/20 text-pink-600 dark:text-pink-400 flex items-center justify-center border border-pink-200 dark:border-pink-500/30 shrink-0">
                   <Palette className="w-3.5 h-3.5" />
                 </div>
-                <h3 className="text-xs font-bold text-white">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                   Shoe Colors ({colorways.length} active)
                 </h3>
               </div>
@@ -516,7 +531,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowColorPalette(prev => !prev)}
-                className="flex items-center gap-1 px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-400 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-pink-600 dark:text-pink-400 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <span>{showColorPalette ? 'Hide Palette' : 'Show Palette'}</span>
                 {showColorPalette ? (
@@ -529,10 +544,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
             {/* Collapsible Color Swatches Bar */}
             {showColorPalette && (
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                <div className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2.5 animate-in fade-in slide-from-top-1 duration-200">
+                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                   <span>Toggle Quick Colors:</span>
-                  <span className="text-amber-400 font-normal text-[10px]">{colorways.map(c => c.colorName).join(', ')}</span>
+                  <span className="text-pink-600 dark:text-pink-400 font-normal text-[10px]">{colorways.map(c => c.colorName).join(', ')}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -545,8 +560,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         onClick={() => handleToggleColorPreset(preset)}
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           isActive 
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-300 ring-2 ring-amber-400/40' 
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-pink-50 dark:bg-pink-500/20 border-pink-400 text-pink-600 dark:text-pink-300 ring-2 ring-pink-400/40' 
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         <span 
@@ -554,18 +569,18 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                           style={{ backgroundColor: preset.hex, borderColor: preset.border }}
                         />
                         <span>{preset.name}</span>
-                        {isActive && <Check className="w-3 h-3 text-amber-400 stroke-[3]" />}
+                        {isActive && <Check className="w-3 h-3 text-pink-500 dark:text-pink-400 stroke-[3]" />}
                       </button>
                     );
                   })}
                 </div>
 
                 {/* Custom Color Input */}
-                <div className="flex items-center gap-2 pt-1 border-t border-slate-900">
+                <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-900">
                   <div className="relative flex-1 flex items-center">
                     <span 
                       className="absolute left-3 w-3 h-3 rounded-full border shadow-sm"
-                      style={{ backgroundColor: selectedColorHex, borderColor: 'rgba(255,255,255,0.4)' }}
+                      style={{ backgroundColor: selectedColorHex, borderColor: 'rgba(0,0,0,0.2)' }}
                     />
                     <input
                       type="text"
@@ -578,16 +593,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                           handleAddCustomColor();
                         }
                       }}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-2 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-semibold"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-2 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-pink-500 font-semibold"
                     />
                   </div>
 
                   <label 
-                    className="relative flex items-center gap-1 px-2 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-slate-300 font-bold cursor-pointer"
+                    className="relative flex items-center gap-1 px-2 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 font-bold cursor-pointer"
                     title="Pick color swatch"
                   >
                     <span 
-                      className="w-3 h-3 rounded-full border border-white/40 shadow-sm"
+                      className="w-3 h-3 rounded-full border border-slate-300 dark:border-white/40 shadow-sm"
                       style={{ backgroundColor: selectedColorHex }}
                     />
                     <span className="text-[10px]">Picker</span>
@@ -602,7 +617,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   <button
                     type="button"
                     onClick={handleAddCustomColor}
-                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl transition-colors cursor-pointer shrink-0"
+                    className="px-3 py-1.5 bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shrink-0"
                   >
                     + Add
                   </button>
@@ -619,33 +634,33 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 return (
                   <div 
                     key={cw.id} 
-                    className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-3 shadow-md"
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 space-y-3 shadow-sm"
                   >
                     {/* Header: Color Swatch, Name, Total Pairs & Quick Stock Buttons */}
-                    <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2">
                       <div className="flex items-center gap-2">
                         <span 
                           className="w-3.5 h-3.5 rounded-full border shrink-0 shadow-sm"
                           style={{ 
                             backgroundColor: effectiveColorHex,
-                            borderColor: 'rgba(255,255,255,0.35)'
+                            borderColor: 'rgba(0,0,0,0.2)'
                           }}
                         />
-                        <span className="font-bold text-white text-xs">
+                        <span className="font-bold text-slate-900 dark:text-white text-xs">
                           {cw.colorName}
                         </span>
-                        <span className="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20">
+                        <span className="text-[10px] bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 font-bold px-2 py-0.5 rounded-full border border-pink-200 dark:border-pink-500/20">
                           {totalColorStock} pairs
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         {/* Quick Fill Stock Buttons */}
-                        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-lg text-[10px]">
+                        <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg text-[10px]">
                           <button
                             type="button"
                             onClick={() => handleFillAllStock(cw.id, 5)}
-                            className="px-1.5 py-0.5 text-slate-400 hover:text-amber-300 font-semibold"
+                            className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-pink-500 dark:hover:text-pink-300 font-semibold"
                             title="Set 5 pairs per size"
                           >
                             5
@@ -653,7 +668,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleFillAllStock(cw.id, 10)}
-                            className="px-1.5 py-0.5 text-slate-400 hover:text-amber-300 font-semibold"
+                            className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-pink-500 dark:hover:text-pink-300 font-semibold"
                             title="Set 10 pairs per size"
                           >
                             10
@@ -661,7 +676,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleFillAllStock(cw.id, 20)}
-                            className="px-1.5 py-0.5 text-slate-400 hover:text-amber-300 font-semibold"
+                            className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-pink-500 dark:hover:text-pink-300 font-semibold"
                             title="Set 20 pairs per size"
                           >
                             20
@@ -669,7 +684,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleFillAllStock(cw.id, 0)}
-                            className="px-1.5 py-0.5 text-rose-400 hover:bg-rose-500/10 font-semibold"
+                            className="px-1.5 py-0.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-semibold rounded"
                             title="Reset stock to 0"
                           >
                             0
@@ -680,7 +695,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleRemoveColorway(cw.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
                           title="Remove colorway"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -692,7 +707,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     <div className="flex items-center gap-3">
                       <div 
                         onClick={() => colorwayFileInputRefs.current[cw.id]?.click()}
-                        className="relative w-14 h-14 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:border-amber-400/50 transition-colors group"
+                        className="relative w-14 h-14 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:border-pink-400 transition-colors group"
                         title="Click to upload photo"
                       >
                         {cw.image ? (
@@ -711,8 +726,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                             </button>
                           </>
                         ) : (
-                          <div className="text-center p-1 text-slate-600 group-hover:text-amber-400 transition-colors">
-                            <ImageIcon className="w-5 h-5 mx-auto text-slate-600 group-hover:text-amber-400" />
+                          <div className="text-center p-1 text-slate-400 group-hover:text-pink-500 transition-colors">
+                            <ImageIcon className="w-5 h-5 mx-auto text-slate-400 group-hover:text-pink-500" />
                           </div>
                         )}
                       </div>
@@ -721,9 +736,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         <button
                           type="button"
                           onClick={() => colorwayFileInputRefs.current[cw.id]?.click()}
-                          className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                         >
-                          <Upload className="w-3.5 h-3.5 text-amber-400" />
+                          <Upload className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400" />
                           <span>Upload Photo</span>
                         </button>
 
@@ -739,7 +754,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
                     {/* Sizes & Stock Inputs */}
                     <div className="space-y-1">
-                      <div className="text-[10px] font-semibold text-slate-400">
+                      <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                         Size Quantities:
                       </div>
 
@@ -747,9 +762,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         {cw.sizes.map((s) => (
                           <div 
                             key={s.size} 
-                            className="bg-slate-900 border border-slate-800 rounded-lg p-1 text-center focus-within:border-amber-400"
+                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1 text-center focus-within:border-pink-500 shadow-sm"
                           >
-                            <div className="text-[10px] font-bold text-slate-300">
+                            <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                               Size {s.size}
                             </div>
                             <input
@@ -758,7 +773,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                               placeholder="0"
                               value={s.stock === 0 ? '' : s.stock}
                               onChange={(e) => handleSizeStockChange(cw.id, s.size, parseInt(e.target.value) || 0)}
-                              className="w-full bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-center text-xs font-bold text-amber-400 placeholder-slate-600 focus:outline-none focus:border-amber-400 mt-0.5"
+                              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-1 py-0.5 text-center text-xs font-bold text-pink-600 dark:text-pink-400 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500 mt-0.5"
                               title={`Quantity in stock for size ${s.size}`}
                             />
                           </div>
@@ -773,11 +788,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
 
           {/* Bottom Action Footer */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800 shrink-0">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800 shrink-0">
             <button
               type="button"
               onClick={handleClose}
-              className="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
+              className="py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -785,7 +800,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             <button
               type="submit"
               disabled={isSavingWithDrive}
-              className="py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer"
+              className="py-2.5 px-5 rounded-xl bg-pink-500 hover:bg-pink-400 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-pink-500/20 active:scale-95 cursor-pointer"
             >
               {isSavingWithDrive ? (
                 <>

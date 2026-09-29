@@ -123,19 +123,19 @@ export const CartModal: React.FC<CartModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-in fade-in">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-800 bg-slate-950/70 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 sm:p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-500/20 shrink-0">
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-white font-['Syne'] truncate">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans'] truncate">
                 Cart & Checkout
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-400 truncate">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
                 Multi-product order & dispatch invoice
               </p>
             </div>
@@ -144,7 +144,7 @@ export const CartModal: React.FC<CartModalProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Close cart"
             >
               <X className="w-5 h-5" />
@@ -156,13 +156,13 @@ export const CartModal: React.FC<CartModalProps> = ({
         <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-5">
           {cart.length === 0 ? (
             /* Empty Cart View */
-            <div className="py-14 px-4 text-center space-y-4 bg-slate-950/50 rounded-2xl border border-dashed border-slate-800">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600">
+            <div className="py-14 px-4 text-center space-y-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600 shadow-sm">
                 <ShoppingCart className="w-8 h-8" />
               </div>
               <div className="space-y-1.5 max-w-sm mx-auto">
-                <h3 className="text-base font-bold text-white font-['Syne']">Your Cart is Empty</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans']">Your Cart is Empty</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Select shoe models, colors, and sizes from the inventory to assemble a multi-product order.
                 </p>
               </div>
@@ -171,7 +171,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/10 active:scale-95"
+                  className="py-2.5 px-5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-pink-500/20 active:scale-95 cursor-pointer"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
                   <span>Browse Shoe Catalog</span>
@@ -184,14 +184,14 @@ export const CartModal: React.FC<CartModalProps> = ({
               {/* Left Column: Cart Items (7 cols) */}
               <div className="lg:col-span-7 space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     Cart Items ({cart.length} product{cart.length > 1 ? 's' : ''})
                   </h3>
                   
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold hover:underline"
+                    className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 flex items-center gap-1 font-semibold hover:underline cursor-pointer"
                     title="Add more pairs from inventory catalog"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -208,10 +208,10 @@ export const CartModal: React.FC<CartModalProps> = ({
                     return (
                       <div 
                         key={item.id}
-                        className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors flex items-center gap-3.5"
+                        className="p-3 bg-slate-50 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors flex items-center gap-3.5 shadow-sm"
                       >
                         {/* Thumbnail */}
-                        <div className="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
                           {item.productImage ? (
                             <img 
                               src={item.productImage} 
@@ -220,18 +220,18 @@ export const CartModal: React.FC<CartModalProps> = ({
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <ShoppingCart className="w-6 h-6 text-slate-700" />
+                            <ShoppingCart className="w-6 h-6 text-slate-400 dark:text-slate-700" />
                           )}
                         </div>
 
                         {/* Product Info */}
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-bold text-white truncate">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                             {item.productName}
                           </h4>
 
-                          <div className="flex items-center gap-2 text-[11px] font-mono mt-1 text-slate-400">
-                            <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200 font-bold">
+                          <div className="flex items-center gap-2 text-[11px] font-mono mt-1 text-slate-500 dark:text-slate-400">
+                            <span className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold">
                               Size {item.size}
                             </span>
                             <span>·</span>
@@ -242,27 +242,27 @@ export const CartModal: React.FC<CartModalProps> = ({
                         {/* Quantity Controls, Price & Remove X Button */}
                         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-xs font-mono font-bold text-amber-300">
+                            <span className="text-xs font-mono font-bold text-pink-600 dark:text-pink-300">
                               ${itemSubtotal.toFixed(2)}
                             </span>
 
-                            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
                               <button
                                 type="button"
                                 onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                                 title="Decrease quantity"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
-                              <span className="w-5 sm:w-6 text-center font-mono text-xs font-bold text-white">
+                              <span className="w-5 sm:w-6 text-center font-mono text-xs font-bold text-slate-900 dark:text-white">
                                 {item.quantity}
                               </span>
                               <button
                                 type="button"
                                 disabled={isMaxStock}
                                 onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                className="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                 title={isMaxStock ? 'Max available stock reached' : 'Increase quantity'}
                               >
                                 <Plus className="w-3 h-3" />
@@ -274,7 +274,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                           <button
                             type="button"
                             onClick={() => removeFromCart(item.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                             title="Remove product"
                             aria-label={`Remove ${item.productName}`}
                           >
@@ -291,7 +291,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                   <button
                     type="button"
                     onClick={clearCart}
-                    className="text-xs text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-slate-800/80 hover:border-rose-500/20 transition-all flex items-center gap-1.5 font-medium"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/80 hover:border-rose-300 dark:hover:border-rose-500/20 transition-all flex items-center gap-1.5 font-medium cursor-pointer"
                     title="Remove all items from cart"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -301,22 +301,22 @@ export const CartModal: React.FC<CartModalProps> = ({
               </div>
 
               {/* Right Column: Checkout Form (5 cols) */}
-              <div className="lg:col-span-5 bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+              <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-950/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-4">
                 <form onSubmit={handleCheckout} className="space-y-4 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
-                    <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2">
+                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2">
                       Store Checkout
                     </h3>
 
                     {/* Walk-in Simplified Section */}
-                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2.5">
-                      <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                    <div className="p-3 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-sm">
+                      <div className="text-xs font-semibold text-pink-600 dark:text-pink-400 flex items-center gap-1.5">
                         <Store className="w-4 h-4" />
                         <span>In-Store Counter Sale</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                             Customer (Optional)
                           </label>
                           <input
@@ -324,11 +324,11 @@ export const CartModal: React.FC<CartModalProps> = ({
                             placeholder="Walk-in Customer"
                             value={customerName}
                             onChange={(e) => setCustomerName(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                             Phone (Optional)
                           </label>
                           <input
@@ -336,7 +336,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                             placeholder="Optional phone"
                             value={customerPhone}
                             onChange={(e) => setCustomerPhone(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                           />
                         </div>
                       </div>
@@ -345,11 +345,11 @@ export const CartModal: React.FC<CartModalProps> = ({
                     {/* Payment Gateway */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="block text-[11px] font-semibold text-slate-400">
+                        <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                           Payment Gateway
                         </label>
                         {paymentMethod === 'Bank Transfer' && (
-                          <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20">
                             <CheckCircle2 className="w-2.5 h-2.5" />
                             Already Paid
                           </span>
@@ -359,7 +359,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       <select
                         value={paymentMethod}
                         onChange={(e) => handlePaymentMethodChange(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-pink-500"
                       >
                         {orderPlatform === 'Walk-in' ? (
                           <>
@@ -376,24 +376,24 @@ export const CartModal: React.FC<CartModalProps> = ({
                   </div>
 
                   {/* Financial Summary Box */}
-                  <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 space-y-1.5 text-xs">
-                    <div className="flex justify-between text-slate-400">
+                  <div className="p-3 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs shadow-sm">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
                       <span>Total Products:</span>
-                      <span className="font-mono text-white font-bold">{cart.length} {cart.length === 1 ? 'Product' : 'Products'}</span>
+                      <span className="font-mono text-slate-900 dark:text-white font-bold">{cart.length} {cart.length === 1 ? 'Product' : 'Products'}</span>
                     </div>
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
                       <span>Subtotal:</span>
-                      <span className="font-mono text-white">${totalCartAmount.toFixed(2)}</span>
+                      <span className="font-mono text-slate-900 dark:text-white">${totalCartAmount.toFixed(2)}</span>
                     </div>
                     {orderPlatform !== 'Walk-in' && (
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between text-slate-500 dark:text-slate-400">
                         <span>Delivery Fee:</span>
-                        <span className="font-mono text-white font-medium">$1.50</span>
+                        <span className="font-mono text-slate-900 dark:text-white font-medium">$1.50</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm font-black border-t border-slate-800 pt-2 text-white">
+                    <div className="flex justify-between text-sm font-black border-t border-slate-200 dark:border-slate-800 pt-2 text-slate-900 dark:text-white">
                       <span>Grand Total (USD):</span>
-                      <span className="font-mono text-base text-amber-400">
+                      <span className="font-mono text-base text-pink-600 dark:text-pink-400">
                         ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
                       </span>
                     </div>
@@ -402,7 +402,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full py-3 px-3.5 sm:px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] flex items-center justify-between gap-2"
+                    className="w-full py-3 px-3.5 sm:px-4 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold transition-all shadow-lg shadow-pink-500/20 active:scale-[0.98] flex items-center justify-between gap-2 cursor-pointer"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <CheckCircle2 className="w-4 h-4 shrink-0" />

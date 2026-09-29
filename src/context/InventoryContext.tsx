@@ -24,7 +24,8 @@ import {
   saveOrderToFirestore,
   savePOToFirestore,
   saveStoreSettingsToFirestore,
-  seedLocalItemsToFirestore
+  seedLocalItemsToFirestore,
+  clearAllCloudProducts
 } from '../services/firebaseDb';
 import { 
   INITIAL_PRODUCTS, 
@@ -143,12 +144,22 @@ const markProductAsDeleted = (id: string) => {
   }
 };
 
-// Purge obsolete demo keys from browser storage once
+// Purge obsolete demo keys and clear all products/SKUs/categories per user request
 if (typeof window !== 'undefined') {
   try {
     localStorage.removeItem('soletrack_products_v1');
     localStorage.removeItem('soletrack_orders_v1');
     localStorage.removeItem('soletrack_po_v1');
+
+    // Force one-time catalog wipe for clean slate
+    const clearedCleanSlate = localStorage.getItem('soletrack_clean_slate_cleared_v6');
+    if (!clearedCleanSlate) {
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEY_CART, JSON.stringify([]));
+      localStorage.setItem('soletrack_clean_slate_cleared_v6', 'true');
+    }
   } catch (e) {
     // ignore
   }
@@ -197,38 +208,22 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [isCloudConnected, setIsCloudConnected] = useState<boolean>(true);
 
-  const DEFAULT_SKUS = [
-    'SHOE-01',
-    'SHOE-02',
-    'SHOE-03',
-    'SHOE-04',
-    'SHOE-05',
-    'SHOE-06',
-    'SHOE-07',
-    'SHOE-08'
-  ];
+  const DEFAULT_SKUS: string[] = [];
 
-  const DEFAULT_CATEGORIES = [
-    'ស្បែកជើងសកល',
-    'ស្បែកជើងធំពោ',
-    'ស្បែកជើងហាម',
-    'ស្បែកជើងក្រវ៉ាត់',
-    'ស្បែកជើងកែង',
-    'ស្បែកជើង Cross'
-  ];
+  const DEFAULT_CATEGORIES: string[] = [];
 
-  // Managed Categories & Model SKUs State
+  // Managed Categories & Model SKUs State (Clean slate: 0 default categories and 0 default SKUs)
   const [customCategories, setCustomCategories] = useState<string[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error(e);
       }
     }
-    return DEFAULT_CATEGORIES;
+    return [];
   });
 
   const [customSkus, setCustomSkus] = useState<string[]>(() => {
@@ -236,12 +231,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error(e);
       }
     }
-    return DEFAULT_SKUS;
+    return [];
   });
 
   // Derived merged lists (custom + current products)
@@ -330,14 +325,24 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const clearOldDefaults = () => {
     setCustomCategories([]);
     setCustomSkus([]);
-    localStorage.removeItem(STORAGE_KEY_CATEGORIES);
-    localStorage.removeItem(STORAGE_KEY_SKUS);
-    // Remove sample default products matching old sample SKUs if any exist
-    setProducts(prev => prev.filter(p => !p.sku.startsWith('SHOE-') && !p.sku.startsWith('ST-DEMO')));
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify([]));
+    saveStoreSettingsToFirestore({ customCategories: [], customSkus: [] }).catch(console.error);
+    setProducts([]);
+    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
+    clearAllCloudProducts().catch(console.error);
   };
 
   // Real-time synchronization across devices (PC, Phone, iPad, and GitHub site)
   useEffect(() => {
+    // One-time cloud purge for clean slate request
+    const cloudPurged = localStorage.getItem('soletrack_cloud_cleared_v6');
+    if (!cloudPurged) {
+      clearAllCloudProducts().catch(console.error);
+      saveStoreSettingsToFirestore({ customCategories: [], customSkus: [] }).catch(console.error);
+      localStorage.setItem('soletrack_cloud_cleared_v6', 'true');
+    }
+
     let initialCloudProductsLoaded = false;
     let initialCloudOrdersLoaded = false;
     let initialCloudPOsLoaded = false;
@@ -433,11 +438,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 
     const unsubStoreSettings = subscribeToStoreSettings((config) => {
-      if (config.customCategories && config.customCategories.length > 0) {
+      if (Array.isArray(config.customCategories)) {
         setCustomCategories(config.customCategories);
         localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(config.customCategories));
       }
-      if (config.customSkus && config.customSkus.length > 0) {
+      if (Array.isArray(config.customSkus)) {
         setCustomSkus(config.customSkus);
         localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify(config.customSkus));
       }
@@ -1089,14 +1094,20 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       markProductAsDeleted(p.id);
       deleteProductFromFirestore(p.id).catch(e => console.error('Cloud product clear error:', e));
     });
+    clearAllCloudProducts().catch(e => console.error('Cloud clear error:', e));
     setProducts([]);
     setOrders([]);
     setPurchaseOrders([]);
     setCart([]);
-    localStorage.removeItem(STORAGE_KEY_PRODUCTS);
-    localStorage.removeItem(STORAGE_KEY_ORDERS);
-    localStorage.removeItem(STORAGE_KEY_PO);
-    localStorage.removeItem(STORAGE_KEY_CART);
+    setCustomCategories([]);
+    setCustomSkus([]);
+    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_PO, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_CART, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEY_SKUS, JSON.stringify([]));
+    saveStoreSettingsToFirestore({ customCategories: [], customSkus: [] }).catch(e => console.error(e));
   };
 
   const restoreAllData = (data: { products?: ShoeProduct[]; orders?: SaleOrder[]; purchaseOrders?: PurchaseOrder[] }) => {

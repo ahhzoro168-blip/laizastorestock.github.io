@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Sleek modern scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
@@ -16,5 +18,5 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.6);
+  background: rgba(236, 72, 153, 0.6);
 }

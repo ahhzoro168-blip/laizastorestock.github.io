@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InventoryProvider, useInventory } from './context/InventoryContext';
-import { GoogleAuthProviderComponent, useGoogleAuth } from './context/GoogleAuthContext';
+import { CloudflareProvider, useCloudflare } from './context/CloudflareContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { InventoryView } from './components/InventoryView';
 import { PosView } from './components/PosView';
@@ -12,19 +13,17 @@ import { ProductDetailModal } from './components/ProductDetailModal';
 import { SellModal } from './components/SellModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { AddProductModal } from './components/AddProductModal';
-import { GoogleSyncModal } from './components/GoogleSyncModal';
 import { ShoeProduct, ShoeColor, SaleOrder } from './types';
-import { RefreshCw } from 'lucide-react';
 
 const MainApp: React.FC = () => {
-  const { products, orders, purchaseOrders, lowStockItems, resetDemoData, restoreAllData } = useInventory();
-  const { user, syncDataFromGoogle, syncDataToGoogle } = useGoogleAuth();
+  const { products, orders, purchaseOrders } = useInventory();
+  const { config, syncToCloudflare } = useCloudflare();
+  const { theme } = useTheme();
 
   // Navigation & Modals State
   const [activeTab, setActiveTab] = useState<ActiveTab>('inventory');
   const [isLowStockDrawerOpen, setIsLowStockDrawerOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isGoogleSyncModalOpen, setIsGoogleSyncModalOpen] = useState(false);
   
   // Selected product ID for detail inspection (PDP)
   const [detailProductId, setDetailProductId] = useState<string | null>(null);
@@ -40,26 +39,15 @@ const MainApp: React.FC = () => {
   const [receiptOrder, setReceiptOrder] = useState<SaleOrder | null>(null);
   const [trackingSearchQuery, setTrackingSearchQuery] = useState<string>('');
 
-  // Auto-restore data from Google Sheets when user is signed in and local state is empty
+  // Auto-sync to Cloudflare D1 Storage whenever products or orders change if autoSyncEnabled is true
   useEffect(() => {
-    if (user && products.length === 0) {
-      syncDataFromGoogle().then(loaded => {
-        if (loaded && loaded.products && loaded.products.length > 0) {
-          restoreAllData(loaded);
-        }
-      });
-    }
-  }, [user]);
-
-  // Auto-sync to Google Sheets whenever products or orders change and user is signed in
-  useEffect(() => {
-    if (user && (products.length > 0 || orders.length > 0)) {
+    if (config.autoSyncEnabled && (products.length > 0 || orders.length > 0)) {
       const timer = setTimeout(() => {
-        syncDataToGoogle(products, orders, purchaseOrders);
-      }, 3500);
+        syncToCloudflare(products, orders, purchaseOrders);
+      }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [products, orders, purchaseOrders, user]);
+  }, [products, orders, purchaseOrders, config.autoSyncEnabled]);
 
   const handleOpenProductDetail = (product: ShoeProduct) => {
     setDetailProductId(product.id);
@@ -81,8 +69,12 @@ const MainApp: React.FC = () => {
     setActiveTab('tracking');
   };
 
+  const isLight = theme === 'light';
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Plus_Jakarta_Sans'] antialiased w-full overflow-x-hidden">
+    <div className={`min-h-screen flex flex-col font-['Plus_Jakarta_Sans'] antialiased w-full overflow-x-hidden transition-colors ${
+      isLight ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
+    }`}>
       
       {/* Top Navigation Bar */}
       <Navbar
@@ -90,7 +82,6 @@ const MainApp: React.FC = () => {
         setActiveTab={setActiveTab}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenLowStockDrawer={() => setIsLowStockDrawerOpen(true)}
-        onOpenGoogleSync={() => setIsGoogleSyncModalOpen(true)}
         onOpenCart={() => {
           setSellPreselectedProduct(null);
           setSellPreselectedSize(undefined);
@@ -132,28 +123,6 @@ const MainApp: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 px-4 sm:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-300 font-['Syne']">SoleTrack</span>
-          <span>· Real-time Footwear Inventory, POS & Delivery Intelligence</span>
-        </div>
-        <div className="flex items-center gap-4 text-[11px]">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm('Clear all catalog, order, and cart records?')) {
-                resetDemoData();
-              }
-            }}
-            className="text-slate-500 hover:text-slate-300 flex items-center gap-1 hover:underline"
-          >
-            <RefreshCw className="w-3 h-3" /> Clear All Data
-          </button>
-          <span>Phnom Penh & Provinces Direct</span>
-        </div>
-      </footer>
-
       {/* Modals and Drawers */}
       <LowStockDrawer
         isOpen={isLowStockDrawerOpen}
@@ -191,21 +160,18 @@ const MainApp: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
-
-      <GoogleSyncModal
-        isOpen={isGoogleSyncModalOpen}
-        onClose={() => setIsGoogleSyncModalOpen(false)}
-      />
     </div>
   );
 };
 
 export default function App() {
   return (
-    <GoogleAuthProviderComponent>
-      <InventoryProvider>
-        <MainApp />
-      </InventoryProvider>
-    </GoogleAuthProviderComponent>
+    <ThemeProvider>
+      <CloudflareProvider>
+        <InventoryProvider>
+          <MainApp />
+        </InventoryProvider>
+      </CloudflareProvider>
+    </ThemeProvider>
   );
 }

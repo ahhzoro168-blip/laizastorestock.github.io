@@ -138,14 +138,14 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
   return (
     <div className="space-y-6">
       {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <button
           type="button"
           onClick={() => setActiveTab('skus')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'skus'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              ? 'bg-pink-500 text-white shadow-md shadow-pink-500/20'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm'
           }`}
         >
           <FileCode className="w-4 h-4" />
@@ -157,8 +157,8 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
           onClick={() => setActiveTab('categories')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'categories'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              ? 'bg-pink-500 text-white shadow-md shadow-pink-500/20'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm'
           }`}
         >
           <FolderPlus className="w-4 h-4" />
@@ -170,8 +170,8 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
           onClick={() => setActiveTab('products')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'products'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              ? 'bg-pink-500 text-white shadow-md shadow-pink-500/20'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm'
           }`}
         >
           <Package className="w-4 h-4" />
@@ -183,25 +183,25 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
       {activeTab === 'skus' && (
         <div className="space-y-6">
           {/* Add New SKU Form */}
-          <form onSubmit={handleAddSkuSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-lg">
+          <form onSubmit={handleAddSkuSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-sm dark:shadow-lg">
             <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                 Add New Model SKU Code
               </label>
               <div className="relative">
-                <FileCode className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <FileCode className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="e.g. SHOE-01, LAIZA-RUNNER, ST-JORDAN..."
                   value={newSkuInput}
                   onChange={(e) => setNewSkuInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs font-mono font-bold text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-amber-400 uppercase"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs font-mono font-bold text-pink-600 dark:text-pink-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-pink-500 uppercase"
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto mt-2 sm:mt-5 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-amber-500/10 shrink-0"
+              className="w-full sm:w-auto mt-2 sm:mt-5 px-5 py-2.5 bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-pink-500/10 shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add Model SKU</span>
@@ -209,19 +209,19 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
           </form>
 
           {/* Model SKUs List */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white font-['Syne'] flex items-center gap-2">
-                <Tag className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white font-['Syne'] flex items-center gap-2">
+                <Tag className="w-4 h-4 text-pink-500 dark:text-pink-400" />
                 <span>Registered Model SKUs</span>
               </h3>
-              <span className="text-xs text-slate-400">{modelSkus.length} registered</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{modelSkus.length} registered</span>
             </div>
 
             {modelSkus.length === 0 ? (
-              <div className="text-center py-12 bg-slate-950 rounded-xl border border-slate-800 p-6 space-y-2">
-                <AlertCircle className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs font-bold text-slate-300">No Model SKUs Registered</p>
+              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-2">
+                <AlertCircle className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto" />
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Model SKUs Registered</p>
                 <p className="text-[11px] text-slate-500">Type a new SKU code above to create your first Model SKU.</p>
               </div>
             ) : (
@@ -232,8 +232,8 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
 
                   return (
                     <div 
-                      key={skuCode}
-                      className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-2 hover:border-slate-700 transition-colors"
+                      key={skuCode} 
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-2 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
                     >
                       {isEditing ? (
                         <div className="flex items-center gap-2 w-full">
@@ -241,20 +241,20 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                             type="text"
                             value={editSkuCode}
                             onChange={(e) => setEditSkuCode(e.target.value)}
-                            className="bg-slate-900 border border-amber-400 rounded-lg px-2.5 py-1 text-xs text-white uppercase font-mono font-bold w-full focus:outline-none"
+                            className="bg-white dark:bg-slate-900 border border-pink-500 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white uppercase font-mono font-bold w-full focus:outline-none"
                             autoFocus
                           />
                           <button
                             type="button"
                             onClick={() => handleSaveSkuEdit(skuCode)}
-                            className="p-1.5 bg-emerald-500 text-slate-950 rounded-lg font-bold hover:bg-emerald-400 cursor-pointer"
+                            className="p-1.5 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-400 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingSku(null)}
-                            className="p-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 cursor-pointer"
+                            className="p-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -262,7 +262,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                       ) : (
                         <>
                           <div>
-                            <span className="font-mono font-bold text-xs text-amber-400 block uppercase">
+                            <span className="font-mono font-bold text-xs text-pink-600 dark:text-pink-400 block uppercase">
                               {skuCode}
                             </span>
                             <span className="text-[10px] text-slate-500">
@@ -277,7 +277,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 setEditingSku(skuCode);
                                 setEditSkuCode(skuCode);
                               }}
-                              className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
                               title="Rename SKU"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                   deleteModelSku(skuCode);
                                 }
                               }}
-                              className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 rounded-lg transition-colors cursor-pointer border border-rose-200 dark:border-rose-500/20"
                               title="Delete SKU"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -310,25 +310,25 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
       {activeTab === 'categories' && (
         <div className="space-y-6">
           {/* Add New Category Form */}
-          <form onSubmit={handleAddCategorySubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-lg">
+          <form onSubmit={handleAddCategorySubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 shadow-sm dark:shadow-lg">
             <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                 Add New Shoe Category Name
               </label>
               <div className="relative">
-                <FolderPlus className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <FolderPlus className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="e.g. High Tops, Sandals, Platform Sneakers..."
                   value={newCategoryInput}
                   onChange={(e) => setNewCategoryInput(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-pink-500"
                 />
               </div>
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto mt-2 sm:mt-5 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-amber-500/10 shrink-0"
+              className="w-full sm:w-auto mt-2 sm:mt-5 px-5 py-2.5 bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-pink-500/10 shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add Category</span>
@@ -336,19 +336,19 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
           </form>
 
           {/* Categories List */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white font-['Syne'] flex items-center gap-2">
-                <Layers className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white font-['Syne'] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-pink-500 dark:text-pink-400" />
                 <span>Registered Shoe Categories</span>
               </h3>
-              <span className="text-xs text-slate-400">{categories.length} registered</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{categories.length} registered</span>
             </div>
 
             {categories.length === 0 ? (
-              <div className="text-center py-12 bg-slate-950 rounded-xl border border-slate-800 p-6 space-y-2">
-                <AlertCircle className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs font-bold text-slate-300">No Categories Registered</p>
+              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-2">
+                <AlertCircle className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto" />
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Categories Registered</p>
                 <p className="text-[11px] text-slate-500">Type a new category name above to create your first category.</p>
               </div>
             ) : (
@@ -359,8 +359,8 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
 
                   return (
                     <div 
-                      key={categoryName}
-                      className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-2 hover:border-slate-700 transition-colors"
+                      key={categoryName} 
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-2 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
                     >
                       {isEditing ? (
                         <div className="flex items-center gap-2 w-full">
@@ -368,20 +368,20 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                             type="text"
                             value={editCategoryName}
                             onChange={(e) => setEditCategoryName(e.target.value)}
-                            className="bg-slate-900 border border-amber-400 rounded-lg px-2.5 py-1 text-xs text-white font-bold w-full focus:outline-none"
+                            className="bg-white dark:bg-slate-900 border border-pink-500 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold w-full focus:outline-none"
                             autoFocus
                           />
                           <button
                             type="button"
                             onClick={() => handleSaveCategoryEdit(categoryName)}
-                            className="p-1.5 bg-emerald-500 text-slate-950 rounded-lg font-bold hover:bg-emerald-400 cursor-pointer"
+                            className="p-1.5 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-400 cursor-pointer"
                           >
                             <Check className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingCategory(null)}
-                            className="p-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 cursor-pointer"
+                            className="p-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -389,7 +389,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                       ) : (
                         <>
                           <div>
-                            <span className="font-bold text-xs text-white block">
+                            <span className="font-bold text-xs text-slate-900 dark:text-white block">
                               {categoryName}
                             </span>
                             <span className="text-[10px] text-slate-500">
@@ -404,7 +404,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 setEditingCategory(categoryName);
                                 setEditCategoryName(categoryName);
                               }}
-                              className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
                               title="Rename Category"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -416,7 +416,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                   deleteCategory(categoryName);
                                 }
                               }}
-                              className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 rounded-lg transition-colors cursor-pointer border border-rose-200 dark:border-rose-500/20"
                               title="Delete Category"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -437,7 +437,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
       {activeTab === 'products' && (
         <div className="space-y-4">
           {/* Search & Filter Toolbar */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-sm dark:shadow-lg">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -445,7 +445,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                 placeholder="Search by Model Name, SKU, or Category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-pink-500 transition-colors"
               />
             </div>
 
@@ -453,7 +453,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
               <select
                 value={selectedCategoryFilter}
                 onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-400 transition-colors cursor-pointer"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500 transition-colors cursor-pointer"
               >
                 <option value="all">All Categories</option>
                 {categories.map(cat => (
@@ -464,7 +464,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
               <select
                 value={selectedGenderFilter}
                 onChange={(e) => setSelectedGenderFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-400 transition-colors cursor-pointer uppercase"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500 transition-colors cursor-pointer uppercase"
               >
                 <option value="all">All Genders</option>
                 <option value="men">Men</option>
@@ -475,11 +475,11 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
           </div>
 
           {/* Products Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-950 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <th className="py-3.5 px-4">Shoe Model & Image</th>
                     <th className="py-3.5 px-4">SKU Code</th>
                     <th className="py-3.5 px-4">Category</th>
@@ -489,12 +489,12 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                     <th className="py-3.5 px-4 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-xs">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-xs">
                   {filteredProducts.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-slate-500">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <AlertCircle className="w-8 h-8 text-slate-600" />
+                          <AlertCircle className="w-8 h-8 text-slate-400 dark:text-slate-600" />
                           <p>No shoe models found matching your search or filters.</p>
                         </div>
                       </td>
@@ -506,15 +506,15 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
 
                       if (isEditing) {
                         return (
-                          <tr key={p.id} className="bg-slate-800/40">
+                          <tr key={p.id} className="bg-pink-50/50 dark:bg-slate-800/40">
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-3">
-                                <img src={primaryImg} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-slate-950 border border-slate-700" />
+                                <img src={primaryImg} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700" />
                                 <input
                                   type="text"
                                   value={editName}
                                   onChange={(e) => setEditName(e.target.value)}
-                                  className="bg-slate-950 border border-amber-500 rounded-lg px-2.5 py-1.5 text-white w-full focus:outline-none text-xs"
+                                  className="bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white w-full focus:outline-none text-xs"
                                   placeholder="Model Name"
                                 />
                               </div>
@@ -524,7 +524,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 type="text"
                                 value={editSku}
                                 onChange={(e) => setEditSku(e.target.value)}
-                                className="bg-slate-950 border border-amber-500 rounded-lg px-2.5 py-1.5 text-white uppercase w-28 focus:outline-none text-xs font-mono"
+                                className="bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white uppercase w-28 focus:outline-none text-xs font-mono"
                                 placeholder="SKU"
                               />
                             </td>
@@ -533,7 +533,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 type="text"
                                 value={editCategory}
                                 onChange={(e) => setEditCategory(e.target.value)}
-                                className="bg-slate-950 border border-amber-500 rounded-lg px-2.5 py-1.5 text-white w-32 focus:outline-none text-xs"
+                                className="bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-white w-32 focus:outline-none text-xs"
                                 placeholder="Category"
                               />
                             </td>
@@ -541,14 +541,14 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                               <select
                                 value={editGender}
                                 onChange={(e) => setEditGender(e.target.value as ShoeGender)}
-                                className="bg-slate-950 border border-amber-500 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none uppercase"
+                                className="bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2 py-1.5 text-slate-900 dark:text-white text-xs focus:outline-none uppercase"
                               >
                                 <option value="men">Men</option>
                                 <option value="women">Women</option>
                                 <option value="unisex">Unisex</option>
                               </select>
                             </td>
-                            <td className="py-3 px-4 text-center text-slate-400 font-bold">
+                            <td className="py-3 px-4 text-center text-slate-500 dark:text-slate-400 font-bold">
                               {p.totalStock} pairs
                             </td>
                             <td className="py-3 px-4 text-right">
@@ -557,15 +557,15 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                   type="number"
                                   value={editCost}
                                   onChange={(e) => setEditCost(Number(e.target.value))}
-                                  className="w-20 bg-slate-950 border border-amber-500 rounded-lg px-2 py-1 text-right text-xs text-white"
+                                  className="w-20 bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2 py-1 text-right text-xs text-slate-900 dark:text-white"
                                   title="Cost Price (៛)"
                                 />
-                                <span className="text-slate-500">/</span>
+                                <span className="text-slate-400 dark:text-slate-500">/</span>
                                 <input
                                   type="number"
                                   value={editRetail}
                                   onChange={(e) => setEditRetail(Number(e.target.value))}
-                                  className="w-20 bg-slate-950 border border-amber-500 rounded-lg px-2 py-1 text-right text-xs text-white"
+                                  className="w-20 bg-white dark:bg-slate-950 border border-pink-500 rounded-lg px-2 py-1 text-right text-xs text-slate-900 dark:text-white"
                                   title="Retail Price (៛)"
                                 />
                               </div>
@@ -575,7 +575,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleSaveProductEdit(p)}
-                                  className="p-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-lg font-bold transition-colors cursor-pointer"
+                                  className="p-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg font-bold transition-colors cursor-pointer"
                                   title="Save changes"
                                 >
                                   <Check className="w-3.5 h-3.5" />
@@ -583,7 +583,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                 <button
                                   type="button"
                                   onClick={() => setEditingProductId(null)}
-                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer"
+                                  className="p-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
                                   title="Cancel"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -595,47 +595,47 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                       }
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-800/30 transition-colors">
+                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              <img src={primaryImg} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-slate-950 border border-slate-800 shrink-0" />
+                              <img src={primaryImg} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0" />
                               <div>
-                                <span className="font-bold text-white block">{p.name}</span>
+                                <span className="font-bold text-slate-900 dark:text-white block">{p.name}</span>
                                 <span className="text-[10px] text-slate-500">Added {new Date(p.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4 font-mono font-bold text-amber-400">
+                          <td className="py-3 px-4 font-mono font-bold text-pink-600 dark:text-pink-400">
                             {p.sku}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] font-semibold border border-slate-700/50">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700/50">
                               {p.category}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-slate-300 uppercase text-[11px] font-bold">
+                          <td className="py-3 px-4 text-slate-700 dark:text-slate-300 uppercase text-[11px] font-bold">
                             {p.gender || 'unisex'}
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                              p.totalStock > 10 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              p.totalStock > 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                              'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              p.totalStock > 10 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' :
+                              p.totalStock > 0 ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-500/20' :
+                              'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
                             }`}>
                               {p.totalStock} pairs
                             </span>
                           </td>
                           <td className="py-3 px-4 text-right font-mono">
-                            <span className="text-slate-400">{formatRiel(p.costPrice)}</span>
-                            <span className="text-slate-600 mx-1">→</span>
-                            <span className="text-emerald-400 font-bold">{formatRiel(p.retailPrice)}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{formatRiel(p.costPrice)}</span>
+                            <span className="text-slate-400 dark:text-slate-600 mx-1">→</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{formatRiel(p.retailPrice)}</span>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => handleStartProductEdit(p)}
-                                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
                                 title="Edit Model, SKU & Category"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -647,7 +647,7 @@ export const CatalogManagerView: React.FC<CatalogManagerViewProps> = () => {
                                     deleteProduct(p.id);
                                   }
                                 }}
-                                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 rounded-lg transition-colors cursor-pointer border border-rose-200 dark:border-rose-500/20"
                                 title="Delete Product"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

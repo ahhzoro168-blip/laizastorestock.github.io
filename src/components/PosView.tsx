@@ -151,38 +151,33 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
-            <ShoppingBag className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white font-['Syne']">
-              SoleTrack Walk-in Sell & POS Terminal
-            </h1>
-            <p className="text-xs text-slate-400">
-              Walk-in counter sales, multi-product checkout, instant inventory deduction, and receipt printing
-            </p>
-          </div>
+      {/* Header Text & Quick Actions (Without box and icon) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white font-['Plus_Jakarta_Sans'] tracking-tight">
+            Walk-in Sell & POS Terminal
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Walk-in counter sales, multi-product checkout, instant inventory deduction, and receipt printing
+          </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
           {lastCompletedOrder && (
             <button
               type="button"
               onClick={() => onOpenReceiptModal(lastCompletedOrder)}
-              className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors border border-slate-700"
+              className="py-2 px-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer shadow-sm"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-400" />
+              <Printer className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400" />
               <span>Reprint Last (#{lastCompletedOrder.orderNumber})</span>
             </button>
           )}
 
-          <div className="flex items-center gap-1.5 py-2 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono">
-            <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-slate-400">Register:</span>
-            <strong className="text-amber-400 font-bold">{totalCartItems} pairs</strong>
+          <div className="flex items-center gap-1.5 py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono shadow-sm">
+            <ShoppingCart className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400" />
+            <span className="text-slate-500 dark:text-slate-400">Register:</span>
+            <strong className="text-pink-600 dark:text-pink-400 font-bold">{totalCartItems} pairs</strong>
           </div>
         </div>
       </div>
@@ -190,27 +185,27 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left: Shoe Catalog Grid (7 cols) */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div className="space-y-4">
             {/* Catalog Search & Active Selection Info */}
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   type="text"
                   placeholder="Search catalog by shoe name or SKU..."
                   value={catalogSearch}
                   onChange={(e) => setCatalogSearch(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-pink-500"
                 />
               </div>
             </div>
 
             {/* Catalog Tiles */}
             {filteredProducts.length === 0 ? (
-              <div className="py-14 text-center bg-slate-950/60 border border-slate-800 rounded-xl p-6">
-                <ShoppingBag className="w-10 h-10 text-slate-700 mx-auto mb-2" />
-                <h4 className="text-xs font-bold text-slate-300">No Shoes in Catalog</h4>
+              <div className="py-14 text-center bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+                <ShoppingBag className="w-10 h-10 text-slate-400 dark:text-slate-700 mx-auto mb-2" />
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300">No Shoes in Catalog</h4>
                 <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
                   {products.length === 0
                     ? 'No shoe products added yet. Go to the Footwear Catalog tab to add your first product.'
@@ -228,11 +223,11 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                       onClick={() => handleProductSelect(p)}
                       className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
                         isSelected
-                          ? 'border-amber-400 bg-slate-800/90 ring-2 ring-amber-400/30 shadow-md'
-                          : 'border-slate-800 bg-slate-950/70 hover:border-slate-700'
+                          ? 'border-pink-500 dark:border-pink-400 bg-pink-50 dark:bg-slate-800/90 ring-2 ring-pink-400/30 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 hover:border-pink-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div className="w-full h-24 sm:h-28 rounded-lg overflow-hidden bg-slate-900 mb-2.5 flex items-center justify-center">
+                      <div className="w-full h-24 sm:h-28 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 mb-2.5 flex items-center justify-center">
                         {p.images[0] ? (
                           <img 
                             src={p.images[0]} 
@@ -241,19 +236,19 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <ShoppingBag className="w-8 h-8 text-slate-700" />
+                          <ShoppingBag className="w-8 h-8 text-slate-400 dark:text-slate-700" />
                         )}
                       </div>
 
                       <div>
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-[10px] uppercase font-mono text-amber-400">{p.gender}</span>
-                          <span className="text-[9px] font-mono font-bold text-slate-400">{p.sku}</span>
+                          <span className="text-[10px] uppercase font-mono text-pink-600 dark:text-pink-400 font-bold">{p.gender}</span>
+                          <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400">{p.sku}</span>
                         </div>
-                        <h4 className="text-xs font-bold text-slate-200 line-clamp-1">{p.name}</h4>
-                        <div className="flex items-center justify-between mt-1 pt-1 border-t border-slate-800/80">
-                          <span className="text-xs font-mono font-bold text-amber-300">{formatRiel(p.retailPrice)}</span>
-                          <span className="text-[10px] font-mono text-slate-400">{p.totalStock} in stock</span>
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{p.name}</h4>
+                        <div className="flex items-center justify-between mt-1 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                          <span className="text-xs font-mono font-bold text-pink-600 dark:text-pink-300">{formatRiel(p.retailPrice)}</span>
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">{p.totalStock} in stock</span>
                         </div>
                       </div>
                     </div>
@@ -264,28 +259,28 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
 
             {/* Active Shoe Quick Config & Add to Register */}
             {activeProduct && (
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-500/10 px-2 py-0.5 rounded border border-pink-200 dark:border-pink-500/20">
                       Configure Pair
                     </span>
-                    <span className="text-xs font-bold text-white truncate max-w-[200px]">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[200px]">
                       {activeProduct.name} ({activeProduct.sku})
                     </span>
                   </div>
-                  <span className="text-xs font-mono font-bold text-amber-400">
+                  <span className="text-xs font-mono font-bold text-pink-600 dark:text-pink-400">
                     {formatRiel(activeProduct.retailPrice)}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-400 mb-1">Color</label>
+                    <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Color</label>
                     <select
                       value={selectedColor}
                       onChange={(e) => setSelectedColor(e.target.value as ShoeColor)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-pink-500"
                     >
                       {availableColors.map(c => (
                         <option key={c} value={c}>{c}</option>
@@ -294,11 +289,11 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-400 mb-1">Size</label>
+                    <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Size</label>
                     <select
                       value={selectedSize}
                       onChange={(e) => setSelectedSize(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-400"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-800 dark:text-white focus:outline-none focus:border-pink-500"
                     >
                       {availableSizes.map(s => (
                         <option key={s} value={s}>Size {s}</option>
@@ -307,23 +302,23 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-400 mb-1">Qty (Stock: {currentStock})</label>
-                    <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg">
+                    <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Qty (Stock: {currentStock})</label>
+                    <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg">
                       <button
                         type="button"
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="px-2 py-1.5 text-slate-400 hover:text-white"
+                        className="px-2 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                       >
                         -
                       </button>
-                      <span className="flex-1 text-center text-xs font-mono font-bold text-white">
+                      <span className="flex-1 text-center text-xs font-mono font-bold text-slate-900 dark:text-white">
                         {quantity}
                       </span>
                       <button
                         type="button"
                         disabled={quantity >= currentStock}
                         onClick={() => setQuantity(quantity + 1)}
-                        className="px-2 py-1.5 text-slate-400 hover:text-white disabled:opacity-30"
+                        className="px-2 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                       >
                         +
                       </button>
@@ -335,7 +330,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                       type="button"
                       disabled={currentStock === 0}
                       onClick={handleAddCurrentToCart}
-                      className="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95"
+                      className="w-full py-2 px-3 rounded-lg bg-pink-500 hover:bg-pink-400 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                       {addFeedback ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                       <span>{addFeedback ? 'Added!' : '+ Add to Sale'}</span>
@@ -348,12 +343,12 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
         </div>
 
         {/* Right: Active Multi-Item POS Terminal (5 cols) */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-none">
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-amber-400" />
-                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                <ShoppingCart className="w-4 h-4 text-pink-500 dark:text-pink-400" />
+                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                   Sale Register ({cart.length} items · {totalCartItems} pairs)
                 </h3>
               </div>
@@ -361,7 +356,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                 <button
                   type="button"
                   onClick={clearCart}
-                  className="text-[11px] text-slate-500 hover:text-rose-400 transition-colors"
+                  className="text-[11px] text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
                 >
                   Clear All
                 </button>
@@ -370,9 +365,9 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
 
             {/* Cart Items List */}
             {cart.length === 0 ? (
-              <div className="py-12 text-center bg-slate-950/60 rounded-xl border border-dashed border-slate-800 p-4 space-y-2">
-                <ShoppingCart className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs font-semibold text-slate-400">Sale Cart is Empty</p>
+              <div className="py-12 text-center bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-4 space-y-2">
+                <ShoppingCart className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto" />
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Sale Cart is Empty</p>
                 <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
                   Pick shoes from the catalog, select color and size, then click &quot;+ Add to Sale&quot; to ring up multiple items.
                 </p>
@@ -382,20 +377,20 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                 {cart.map((item) => (
                   <div 
                     key={item.id}
-                    className="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center justify-between gap-2.5"
+                    className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2.5"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-slate-900 overflow-hidden shrink-0 border border-slate-800 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-900 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 flex items-center justify-center">
                       {item.productImage ? (
                         <img src={item.productImage} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <ShoppingBag className="w-4 h-4 text-slate-700" />
+                        <ShoppingBag className="w-4 h-4 text-slate-400 dark:text-slate-700" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-bold text-white truncate">{item.productName}</h4>
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-                        <span className="text-amber-400 font-bold">{item.sku}</span>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{item.productName}</h4>
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                        <span className="text-pink-600 dark:text-pink-400 font-bold">{item.sku}</span>
                         <span>·</span>
                         <span>Size {item.size}</span>
                         <span>·</span>
@@ -404,35 +399,35 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg">
+                      <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                         <button
                           type="button"
                           onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                          className="px-1.5 py-0.5 text-slate-400 hover:text-white"
+                          className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                         >
                           <Minus className="w-2.5 h-2.5" />
                         </button>
-                        <span className="px-1.5 text-[11px] font-mono font-bold text-white">
+                        <span className="px-1.5 text-[11px] font-mono font-bold text-slate-900 dark:text-white">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           disabled={item.quantity >= item.stock}
                           onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                          className="px-1.5 py-0.5 text-slate-400 hover:text-white disabled:opacity-30"
+                          className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                         >
                           <Plus className="w-2.5 h-2.5" />
                         </button>
                       </div>
 
-                      <span className="text-xs font-mono font-bold text-amber-300 w-14 text-right">
+                      <span className="text-xs font-mono font-bold text-pink-600 dark:text-pink-300 w-14 text-right">
                         ${(item.unitPrice * item.quantity).toFixed(2)}
                       </span>
 
                       <button
                         type="button"
                         onClick={() => removeFromCart(item.id)}
-                        className="text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 p-1 rounded-lg transition-colors"
+                        className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 p-1 rounded-lg transition-colors cursor-pointer"
                         title="Remove product"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -446,30 +441,30 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
             {/* Fast Register Form */}
             <form onSubmit={handleCheckout} className="space-y-3 pt-2">
               {/* Walk-in Store Purchase Section */}
-              <div className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-2">
-                <div className="text-[11px] font-semibold text-amber-400/90 flex items-center gap-1.5">
+              <div className="p-2.5 bg-slate-50 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800/80 space-y-2">
+                <div className="text-[11px] font-semibold text-pink-600 dark:text-pink-400/90 flex items-center gap-1.5">
                   <Store className="w-3.5 h-3.5" />
                   <span>In-Store Walk-in Purchase</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Customer (Optional)</label>
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Customer (Optional)</label>
                     <input
                       type="text"
                       placeholder="Walk-in Customer"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-0.5">Phone (Optional)</label>
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">Phone (Optional)</label>
                     <input
                       type="text"
                       placeholder="Optional phone"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-pink-500"
                     />
                   </div>
                 </div>
@@ -478,15 +473,15 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
               {/* Payment Method */}
               <div>
                 <div className="flex items-center justify-between mb-0.5">
-                  <label className="block text-[10px] text-slate-400">Payment Method</label>
+                  <label className="block text-[10px] text-slate-500 dark:text-slate-400">Payment Method</label>
                   {paymentMethod === 'Bank Transfer' && (
-                    <span className="text-[9px] text-emerald-400 font-semibold">✓ Already Paid</span>
+                    <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">✓ Already Paid</span>
                   )}
                 </div>
                 <select
                   value={paymentMethod}
                   onChange={(e) => handlePaymentChange(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-pink-500"
                 >
                   <option value="Cash">Cash (In-Store)</option>
                   <option value="Bank Transfer">Bank Transfer / KHQR (Paid)</option>
@@ -497,24 +492,24 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
               </div>
 
               {/* Total Summary */}
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1 text-xs">
-                <div className="flex justify-between text-slate-400">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
                   <span>Total Products:</span>
-                  <span className="font-mono text-white font-bold">{cart.length} {cart.length === 1 ? 'Product' : 'Products'}</span>
+                  <span className="font-mono text-slate-900 dark:text-white font-bold">{cart.length} {cart.length === 1 ? 'Product' : 'Products'}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
                   <span>Subtotal:</span>
-                  <span className="font-mono text-white font-medium">${totalCartAmount.toFixed(2)}</span>
+                  <span className="font-mono text-slate-900 dark:text-white font-medium">${totalCartAmount.toFixed(2)}</span>
                 </div>
                 {orderPlatform !== 'Walk-in' && (
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
                     <span>Delivery Fee:</span>
-                    <span className="font-mono text-white font-medium">$1.50</span>
+                    <span className="font-mono text-slate-900 dark:text-white font-medium">$1.50</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm font-black border-t border-slate-800 pt-1.5 text-white">
+                <div className="flex justify-between text-sm font-black border-t border-slate-200 dark:border-slate-800 pt-1.5 text-slate-900 dark:text-white">
                   <span>Grand Total:</span>
-                  <span className="font-mono text-amber-400 text-base">
+                  <span className="font-mono text-pink-600 dark:text-pink-400 text-base">
                     ${(totalCartAmount + (orderPlatform === 'Walk-in' ? 0 : 1.50)).toFixed(2)}
                   </span>
                 </div>
@@ -523,7 +518,7 @@ export const PosView: React.FC<PosViewProps> = ({ onOpenReceiptModal }) => {
               <button
                 type="submit"
                 disabled={cart.length === 0}
-                className="w-full py-3 px-3.5 sm:px-4 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold transition-all shadow-md active:scale-[0.98] flex items-center justify-between gap-2"
+                className="w-full py-3 px-3.5 sm:px-4 rounded-xl bg-pink-500 hover:bg-pink-400 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold transition-all shadow-md active:scale-[0.98] flex items-center justify-between gap-2 cursor-pointer"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />

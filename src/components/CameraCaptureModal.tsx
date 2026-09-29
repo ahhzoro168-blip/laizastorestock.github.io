@@ -121,18 +121,18 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900/90">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90">
           <div className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-amber-400" />
-            <span className="font-semibold text-white text-sm tracking-wide">
+            <Camera className="w-5 h-5 text-pink-500 dark:text-pink-400" />
+            <span className="font-semibold text-slate-900 dark:text-white text-sm tracking-wide">
               {capturedImage ? 'Review Shoe Photo' : 'Capture Shoe Photo'}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -156,7 +156,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             <>
               {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-10 text-slate-400 text-xs">
-                  <RefreshCw className="w-5 h-5 animate-spin mr-2 text-amber-400" />
+                  <RefreshCw className="w-5 h-5 animate-spin mr-2 text-pink-400" />
                   Initializing Camera Sensor...
                 </div>
               )}
@@ -170,7 +170,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               {/* Overlay Grid lines for framing shoes */}
               <div className="absolute inset-6 border border-white/20 rounded-xl pointer-events-none flex flex-col justify-between p-3">
                 <div className="flex justify-between text-[10px] text-white/50 tracking-wider font-mono">
-                  <span>SOLETRACK CAM</span>
+                  <span>LAIZA STORE CAM</span>
                   <span>CENTER SHOE</span>
                 </div>
                 <div className="flex justify-between text-[10px] text-white/50 tracking-wider font-mono">
@@ -186,13 +186,13 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
           {capturedImage ? (
             <>
               <button
                 type="button"
                 onClick={retake}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
                 Retake Photo
@@ -200,7 +200,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <button
                 type="button"
                 onClick={confirmPhoto}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-md shadow-amber-500/10"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-md shadow-pink-500/20 cursor-pointer"
               >
                 <Check className="w-4 h-4" />
                 Use Photo
@@ -211,7 +211,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <button
                 type="button"
                 onClick={toggleFacingMode}
-                className="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center gap-2 transition-colors"
+                className="py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
                 title="Switch Front / Back Camera"
               >
                 <RefreshCw className="w-4 h-4 text-slate-400" />
@@ -222,7 +222,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                 type="button"
                 onClick={takeSnapshot}
                 disabled={isLoading || !!error}
-                className="flex-1 py-3 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-amber-500/20"
+                className="flex-1 py-3 px-6 rounded-xl bg-pink-500 hover:bg-pink-400 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-pink-500/20 cursor-pointer"
               >
                 <Camera className="w-4 h-4" />
                 Snap High-Res Photo

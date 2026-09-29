@@ -7,7 +7,8 @@ import {
   collection, 
   onSnapshot, 
   getDocFromServer,
-  writeBatch
+  writeBatch,
+  getDocs
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { ShoeProduct, SaleOrder, PurchaseOrder } from '../types';
@@ -223,7 +224,25 @@ export function subscribeToStoreSettings(
 export async function saveStoreSettingsToFirestore(config: StoreConfig): Promise<void> {
   const docRef = doc(db, 'settings', 'store_config');
   const cleanData = sanitizeForFirestore(config);
-  await setDoc(docRef, cleanData, { merge: true });
+  await setDoc(docRef, cleanData);
+}
+
+/**
+ * Clear all cloud products from Firestore collection
+ */
+export async function clearAllCloudProducts(): Promise<void> {
+  try {
+    const colRef = collection(db, 'products');
+    const snapshot = await getDocs(colRef);
+    if (snapshot.empty) return;
+    const batch = writeBatch(db);
+    snapshot.forEach(docSnap => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+  } catch (e) {
+    console.error('Failed clearing cloud products:', e);
+  }
 }
 
 /**

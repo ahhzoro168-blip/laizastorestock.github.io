@@ -30,17 +30,17 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl my-auto">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl my-auto">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/70">
-          <div className="flex items-center gap-2 text-emerald-400">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
+          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
             <CheckCircle className="w-5 h-5" />
-            <span className="font-bold text-sm tracking-wide text-white">Sale Recorded Successfully</span>
+            <span className="font-bold text-sm tracking-wide text-slate-900 dark:text-white">Sale Recorded Successfully</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -54,7 +54,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           >
             {/* Header Brand */}
             <div className="text-center border-b border-dashed border-slate-300 pb-4 mb-4">
-              <h2 className="text-lg font-black tracking-tight font-['Syne']">SOLETRACK FOOTWEAR</h2>
+              <h2 className="text-lg font-black tracking-tight font-['Plus_Jakarta_Sans']">LAIZA STORE FOOTWEAR</h2>
               <p className="text-[11px] text-slate-600">Phnom Penh Flagship & Province Dispatch Hub</p>
               <p className="text-[10px] text-slate-500 font-mono mt-0.5">Tel: +855 (0) 12 884 921 · VAT Registered</p>
               
@@ -80,7 +80,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               {order.orderPlatform && (
                 <div className="flex justify-between">
                   <span className="text-slate-500">Channel / Platform:</span>
-                  <span className="font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded text-[11px] border border-amber-200">
+                  <span className="font-semibold text-pink-600 bg-pink-50 px-1.5 py-0.2 rounded text-[11px] border border-pink-200">
                     {order.orderPlatform}
                   </span>
                 </div>
@@ -96,7 +96,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 </span>
               </div>
               {order.locationType === 'Province' && (
-                <div className="flex justify-between text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                <div className="flex justify-between text-pink-800 bg-pink-50 px-2 py-0.5 rounded border border-pink-200">
                   <span className="font-medium text-[11px]">Sender Phone (VET/J&T):</span>
                   <span className="font-mono font-bold text-[11px]">{order.ownerPhone || '017 249 041'}</span>
                 </div>
@@ -177,7 +177,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </div>
 
             <p className="text-[10px] text-center text-slate-500 mt-4 leading-normal">
-              Thank you for choosing SoleTrack! Free size exchange within 7 days in original condition.
+              Thank you for choosing Laiza Store! Free size exchange within 7 days in original condition.
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               Print Thermal Invoice
@@ -194,7 +194,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <button
               type="button"
               onClick={handleTrackClick}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-500/10"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-pink-500 hover:bg-pink-400 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-pink-500/20 cursor-pointer"
             >
               <Truck className="w-4 h-4" />
               Track Delivery
