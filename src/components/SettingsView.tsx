@@ -24,6 +24,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useInventory, DEFAULT_STORE_LOGO } from '../context/InventoryContext';
+import { useCloudflare } from '../context/CloudflareContext';
 import { useTheme } from '../context/ThemeContext';
 import { CatalogManagerView } from './CatalogManagerView';
 import { CloudflareSettingsSection } from './CloudflareSettingsSection';
@@ -36,7 +37,8 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defaultSection, onBackToSettings }) => {
-  const { products, clearAllData, storeName, storeLogo, updateStoreProfile } = useInventory();
+  const { products, orders, purchaseOrders, clearAllData, storeName, storeLogo, categories, modelSkus, updateStoreProfile } = useInventory();
+  const { uploadProductPhoto, syncToCloudflare } = useCloudflare();
   const { theme, toggleTheme, setTheme } = useTheme();
   const isLight = theme === 'light';
   const [activeSettingsSection, setActiveSettingsSection] = useState<'general' | 'cloudflare' | 'catalog' | 'seasonal' | null>(defaultSection ?? null);
@@ -48,6 +50,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defa
   }, [defaultSection]);
   const [localStoreName, setLocalStoreName] = useState(storeName);
   const [localStoreLogo, setLocalStoreLogo] = useState(storeLogo);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [storePhone, setStorePhone] = useState('017 249 041');
   const [currency, setCurrency] = useState(() => {
     return localStorage.getItem('soletrack_currency') || 'USD ($)';
@@ -70,34 +73,72 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defa
       alert('Please select a valid image file (PNG, JPG, WebP, SVG)');
       return;
     }
+
+    setIsUploadingLogo(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const base64 = event.target?.result as string;
       if (base64) {
-        setLocalStoreLogo(base64);
-        updateStoreProfile({ storeLogo: base64 });
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 2500);
+        try {
+          // Upload logo directly to Cloudflare R2 bucket (public CDN)
+          const ext = file.name.split('.').pop() || 'jpg';
+          const cleanName = `store_logo_${Date.now()}.${ext}`;
+          const r2Url = await uploadProductPhoto(base64, cleanName);
+          
+          setLocalStoreLogo(r2Url);
+          updateStoreProfile({ storeLogo: r2Url });
+          
+          // Persist store settings to Cloudflare D1 immediately
+          await syncToCloudflare(products, orders, purchaseOrders, {
+            storeName: localStoreName.trim(),
+            storeLogo: r2Url,
+            customCategories: categories,
+            customSkus: modelSkus
+          });
+
+          setSavedSuccess(true);
+          setTimeout(() => setSavedSuccess(false), 3000);
+        } catch (err) {
+          console.error('Failed uploading store logo to Cloudflare R2:', err);
+          setLocalStoreLogo(base64);
+          updateStoreProfile({ storeLogo: base64 });
+        } finally {
+          setIsUploadingLogo(false);
+        }
       }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
 
-  const handleResetLogo = () => {
+  const handleResetLogo = async () => {
     setLocalStoreLogo(DEFAULT_STORE_LOGO);
     updateStoreProfile({ storeLogo: DEFAULT_STORE_LOGO });
+    await syncToCloudflare(products, orders, purchaseOrders, {
+      storeName: localStoreName.trim(),
+      storeLogo: DEFAULT_STORE_LOGO,
+      customCategories: categories,
+      customSkus: modelSkus
+    });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('soletrack_currency', currency);
     updateStoreProfile({
       storeName: localStoreName.trim(),
       storeLogo: localStoreLogo
     });
+    
+    await syncToCloudflare(products, orders, purchaseOrders, {
+      storeName: localStoreName.trim(),
+      storeLogo: localStoreLogo,
+      customCategories: categories,
+      customSkus: modelSkus
+    });
+
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
   };
@@ -393,11 +434,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenAddModal, defa
                   />
                   <button
                     type="button"
+                    disabled={isUploadingLogo}
                     onClick={() => logoInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-500 hover:bg-pink-400 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-500 hover:bg-pink-400 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>Upload Logo</span>
+                    {isUploadingLogo ? (
+                      <>
+                        <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading to Cloudflare R2...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Upload Logo to Cloudflare</span>
+                      </>
+                    )}
                   </button>
 
                   {localStoreLogo !== DEFAULT_STORE_LOGO && (
