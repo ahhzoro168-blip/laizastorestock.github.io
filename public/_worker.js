@@ -89,10 +89,21 @@ async function proxyToCloudflareApi(request, env, subPath) {
   }
 
   const isBodyAllowed = !['GET', 'HEAD'].includes(request.method.toUpperCase());
+  
+  // Clone stream body or parse safely for proxying
+  let reqBody = undefined;
+  if (isBodyAllowed) {
+    try {
+      reqBody = await request.arrayBuffer();
+    } catch (e) {
+      reqBody = undefined;
+    }
+  }
+
   const proxyRequest = new Request(targetUrl, {
     method: request.method,
     headers,
-    body: isBodyAllowed ? request.body : undefined,
+    body: reqBody,
     redirect: 'follow',
   });
 
@@ -120,11 +131,12 @@ async function proxyToCloudflareApi(request, env, subPath) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const method = request.method.toUpperCase();
 
     // 1. Intercept all HTTP requests starting with /api/cloudflare/
     if (url.pathname.startsWith('/api/cloudflare/')) {
       // Cleanly handle OPTIONS preflight CORS requests
-      if (request.method === 'OPTIONS') {
+      if (method === 'OPTIONS') {
         return new Response(null, {
           status: 204,
           headers: corsHeaders(),
@@ -133,10 +145,10 @@ export default {
 
       const path = url.pathname;
 
-      // --- Route 1: Status Check ---
+      // --- Route 1: Status Check (GET or POST) ---
       if (path.endsWith('/status')) {
         let body = {};
-        if (request.method === 'POST') {
+        if (method === 'POST') {
           try { body = await request.json(); } catch (e) {}
         } else {
           body = Object.fromEntries(url.searchParams.entries());
@@ -175,8 +187,12 @@ export default {
         });
       }
 
-      // --- Route 2: Sync Pull ---
+      // --- Route 2: Sync Pull (Allow GET and POST) ---
       if (path.endsWith('/sync/pull')) {
+        if (method !== 'GET' && method !== 'POST') {
+          return jsonResponse({ error: `Method ${method} Not Allowed` }, 405);
+        }
+
         try {
           const pullRes = await executeSql(env, 'SELECT * FROM inventory;', [], {});
           const rawResults = pullRes?.result?.[0]?.results || pullRes?.result || [];
@@ -189,11 +205,16 @@ export default {
         }
       }
 
-      // --- Route 3: Sync Push ---
+      // --- Route 3: Sync Push (Allow POST and PUT) ---
       if (path.endsWith('/sync/push')) {
+        if (method !== 'POST' && method !== 'PUT') {
+          return jsonResponse({ error: `Method ${method} Not Allowed` }, 405);
+        }
+
         try {
-          const body = await request.json();
-          return jsonResponse({ success: true, message: 'Sync pushed successfully' });
+          let body = {};
+          try { body = await request.json(); } catch (e) {}
+          return jsonResponse({ success: true, message: 'Sync pushed successfully', received: body });
         } catch (err) {
           return jsonResponse({ success: false, error: err.message }, 500);
         }
